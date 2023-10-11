@@ -1,40 +1,72 @@
 <template>
-  <div><AppHeader/></div>
+  <div><AppHeader v-if="!isTableRoute" :key="storeStatusHeader"/></div>
   <div class="content">
-    <Main_content/>
+    <router-view :key="routeKey"></router-view>
   </div>
-  <div><AppFooter/></div>
-  
+    <div><AppFooter v-if="!isTableRoute"/></div>
 </template>
 
 <script>
+
 import AppHeader from './components/AppHeader.vue'
 import AppFooter from './components/AppFooter.vue'
-import Main_content from './components/Main_content.vue'
 
 export default {
   name: 'App',
   components: {
     AppHeader,
     AppFooter,
-    Main_content,
+  },
+
+  data() {
+    return {
+      statusHeader: 0
+    };
+  },
+
+  methods: {
+  },
+
+  computed: {
+    storeStatusHeader() {
+      return this.$store.getters.getStatusHeader;
+    },
+    routeKey() {
+      // Проверьте, соответствует ли текущий маршрут PlayerProfile
+      if (this.$route.name == 'ProfilePage') {
+        // console.log('routeKey = ', this.routeKey)
+        return this.$route.params.user_id;
+      } else {
+        // console.log('routeKey = Null')
+        return null; // Используйте null как ключ для других компонентов
+      }
+    },
+    isTableRoute() {
+      // Получите текущий путь из маршрутизатора
+      const currentPath = this.$route.path;
+      // Проверьте, является ли текущий путь маршрутом вида /table/:table_id
+      return currentPath.startsWith('/table/');
+    },
+  }
 }
-}
+
 </script>
 
 <style>
-
-@import url('https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;800&family=Roboto:wght@400;700;900&display=swap');
 #app {
     margin: 0;
     padding: 0;
     min-height: 100vh; /* Минимальная высота всего экрана */
     display: flex;
     flex-direction: column; /* Элементы будут располагаться вертикально */
-    font-family: 'Roboto', sans-serif;
+    background: Honeydew;
 }
 .content {
     flex-grow: 1;
+    background: LightGrey;
+}
+.full {
+    width: 100%;
 }
 
 </style>

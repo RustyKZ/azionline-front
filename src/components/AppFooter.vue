@@ -10,108 +10,32 @@
 </script>
 
 <template>
-    <div class="mainbox">
-        <div class="container">
-
-            <div class="pre-left">
-                <div>
-                    <img src="/images/logo-footer.png" alt="AZI Online">
-                </div>
+    <div class="container">
+          <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
+            <div class="col-md-5 d-flex align-items-center">
+                <a href="/" class="mb-3 me-2 mb-md-0 text-body-secondary text-decoration-none lh-1">
+                    <img src="/images/logo-footer.png" class="bi" height="36">
+                </a>
+                <span class="mb-3 mb-md-0 text-body-secondary">© 2023 SuperPuper Company, Inc</span>
+            </div>
+            <div>
+                <a href="#" class="mb-3 me-4 mb-md-0 text-body-secondary text-decoration-none lh-1"><img src="/images/appstore.png" class="bi" height="44"></a>
+                <a href="#" class="mb-3 me-2 mb-md-0 text-body-secondary text-decoration-none lh-1"><img src="/images/googleplay.png" class="bi" height="44"></a>
+                <!-- <button class="btn btn-outline-success me-2"> Partner Link 1 </button>
+                <button class="btn btn-outline-success me-2"> Partner Link 2 </button> -->
             </div>
 
-            <div class="left">
-                <p> 2023 &copy; Company, Inc</p>
-            </div>
-
-            <div class="center">
-                <ul class="links">
-                    <li>Link 1</li>
-                    <li>Link 2</li>
-                    <li>Link 3</li>
-                    <li>Link 4</li>
-                </ul>
-            </div>
-
-            <div class="right">
-                <ul class="social">
-                    <li><img src="/images/36-discord.png"></li>
-                    <li><img src="/images/36-facebook.png"></li>
-                    <li><img src="/images/36-instagram.png"></li>
-                    <li><img src="/images/36-reddit.png"></li>
-                    <li><img src="/images/36-twitter.png"></li>
-                </ul>
-            </div>
+            <ul class="nav col-md-3 justify-content-end list-unstyled d-flex">
+                <li class="ms-3"><a class="text-body-secondary" href="#"><img src="/images/36-discord.png" class="bi" width="36" height="36"></a></li>
+                <li class="ms-3"><a class="text-body-secondary" href="#"><img src="/images/36-reddit.png" class="bi" width="36" height="36"></a></li>
+                <li class="ms-3"><a class="text-body-secondary" href="#"><img src="/images/36-x.png" class="bi" width="36" height="36"></a></li>
+                <li class="ms-3"><a class="text-body-secondary" href="#"><img src="/images/36-facebook.png" class="bi" width="36" height="36"></a></li>
+                <li class="ms-3"><a class="text-body-secondary" href="#"><img src="/images/36-instagram.png" class="bi" width="36" height="36"></a></li>
+            </ul>
+          </footer>
         </div>
-    </div>
+
 </template>
 
 <style scoped>
-
-.mainbox {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #f0fff0;
-    font-size: 16px;
-    width: 100%;
-    height: 70px;
-}
-.container {
-    display: flex;
-    width: 1280px;
-    justify-content: center;
-    align-items: center;
-    padding: 5px;
-}
-
-.pre-left {
-    display: flex;
-    flex: 15%;
-    justify-content: center;
-    align-items: center;
-}
-
-.left {
-    display: flex;
-    flex: 25%;
-    justify-content: center;
-    align-items: center;
-}
-
-.center {
-    flex: 40%;
-    justify-content: center;
-}
-
-.right {
-    flex: 25%;
-}
-
-.links {
-    list-style-type: none; /* Убираем маркеры (круглишки) */
-    padding: 0; /* Убираем внутренний отступ */
-    margin: 0; /* Убираем внешний отступ */
-    display: flex; /* Устанавливаем flex-контейнер */
-    justify-content: center;
-    
-}
-
-.links li {
-    margin-right: 50px; /* Добавляем небольшой отступ между элементами */
-    cursor: pointer;
-}
-
-.social {
-    list-style-type: none; /* Убираем маркеры (круглишки) */
-    padding: 0; /* Убираем внутренний отступ */
-    margin: 0; /* Убираем внешний отступ */
-    display: flex; /* Устанавливаем flex-контейнер */
-    justify-content: flex-end; /* Выравниваем элементы по правому краю */
-}
-
-.social li {
-    margin-left: 10px;
-    cursor: pointer;
-}
-
 </style>

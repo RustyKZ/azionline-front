@@ -1,121 +1,266 @@
 <script>
+    import axios from 'axios';
+    import { checkAuth } from './auth.js';
+    import { walletConnect } from './wallet_connect.js'
+    import { walletDisconnect } from './wallet_connect.js'
+    import { checkMetaMaskConnection } from './wallet_connect.js'
+    import { walletEmailConnect } from './wallet_connect.js'
+    import { mapGetters, mapMutations } from 'vuex';
+    // import { checkLogin } from './auth.js';
+
+
     export default {
         name: 'AppHeader',
         data() {
             return {
-                username: ""
+                baseUrl: this.$root.serverUrl,
+                isAuth: false,
+                isWeb3Auth: false,
+                userId: 0,
+                userList: [],
+                userAddress: '',
+                isHovered: false,
+                headerUserNickname: '',
+                userActiveTable: 0
             }
         },
+        props: {
+        },
+        created() {
+            if (!this.userId) {
+                    this.userId = 0;
+                }
+            this.checkAuthorization(); // Вызывайте функцию проверки при создании компонента
+            this.checkWeb3connection();
+            // console.log('User auth? - ', this.isAuth)
+            const userListString = localStorage.getItem('user_list')
+            this.userList = JSON.parse(userListString) // Парсим строку JSON в объект
+            this.headerUserNickname = localStorage.getItem('current_user_nickname')
+            // console.log('Current user: ',this.headerUserNickname,'Users registered: ', this.userList)
+            this.userActiveTable = localStorage.getItem('user_active_table')
+            console.log('User Active Table = ', this.userActiveTable)
+        },
         methods: {
+            ...mapMutations(['setIsLogin', 'setIsWeb3Login', 'setActiveTable']),
+            async checkAuthorization() {
+                try {
+                    this.isAuth = await checkAuth(this.baseUrl); // Проверяйте авторизацию
+                    if (this.isAuth) {
+                        // Пользователь авторизован, выполните нужные действия
+                        this.userId = localStorage.getItem('user_id');
+                        this.userActiveTable = localStorage.getItem('user_active_table');
+                    } else {
+                        // Пользователь не авторизован, выполните нужные действия
+                        this.isAuth = false;
+                        console.log('User is not authenticated');
+                    }
+                } catch (error) {       
+                console.error('Error checking authorization:', error);
+                // Обработка ошибок при проверке авторизации
+                }
+            },
+
+            async checkWeb3connection(){
+                try {
+                    this.isWeb3Auth = await checkMetaMaskConnection(); // Проверяйте авторизацию
+                    if (this.isWeb3Auth) {
+                        // Пользователь авторизован, выполните нужные действия
+                        this.userAddress = localStorage.getItem('user_wallet');
+                        this.userId = localStorage.getItem('user_id');
+                        this.userActiveTable = localStorage.getItem('user_active_table');
+                        // this.setIsWeb3Login(true);
+                    } else {
+                        // Пользователь не авторизован, выполните нужные действия
+                        this.isWeb3Auth = false;
+                        console.log('User is not authenticated with Web3');
+                    }
+                } catch (error) {       
+                console.error('Error checking authorization:', error);
+                // Обработка ошибок при проверке авторизации
+                }
+            },
+
             goToAddPostPage() {
-                // window.location.href = '/addpost.html';
-                // this.$router.push('/addpost');
+                this.$router.push('/addpost');
             },
             goToDeletePostPage() {
-                window.location.href = '/deletepost.html';
+                this.$router.push('/deletepost');
             },
             goToHomePage() {
-                window.location.href = '/';
+                this.$router.push('/');
             },
-            // ... остальные методы
-        },
+            goToRegisterPage() {
+                this.$router.push('/signup');
+            },
+            goToLoginPage() {
+                this.$router.push('/login');
+            },
+            goToGameRules(){
+                this.$store.commit('incrementStatusHeader');
+            },
+            goToActiveTable() {
+                this.$router.push(`/table/${this.userActiveTable}`);
+            }
+            ,
+            goToLogoutPage() {
+                axios.post(this.baseUrl + '/API/logout')
+                    .then(response => {
+                        localStorage.removeItem('access_token');
+                        localStorage.removeItem('user_id');
+                        localStorage.removeItem('user_list');
+                        localStorage.removeItem('current_user_niackname');
+                        localStorage.removeItem('user_active_table');
+                        this.setIsLogin(false);
+                        this.setActiveTable(0);
+                        this.isAuth = checkAuth(this.baseUrl);
+                        console.log(this.isAuth);
+                        if (this.$route.path === '/') {
+                            this.$store.commit('incrementStatusHeader');
+                        } else {
+                            this.$store.commit('incrementStatusHeader');
+                            this.$router.replace('/'); // В противном случае перейти на главную
+                        }
+                        console.log(response)
+                    })
+                    .catch(error => {
+                    console.error('Error logout user:', error);
+                })
+            },
+            webSocketTest() {
+                this.$socket.emit('join_table')
+                console.log('socket emit')
+            },
 
+            async walletConnectPage() {
+                if (this.isAuth || this.$store.getters.getIsLogin) {
+                    walletEmailConnect()
+                        .then(() => {
+                        // Задаем паузу в миллисекундах (например, 1000 миллисекунд = 1 секунда)
+                        const pauseDuration = 1000;
+                        // После заданной паузы выполняем incrementStatusHeader()
+                        setTimeout(() => {
+                        this.$store.commit('incrementStatusHeader');
+                        }, pauseDuration);
+                        this.setActiveTable(0);
+                    })
+                    .catch(error => {
+                        console.error('Error in walletConnectAndIncrementStatusHeader:', error);
+                        // Обработайте ошибку по вашему усмотрению
+                    });
+                } else {
+                    walletConnect()
+                        .then(() => {
+                        // Задаем паузу в миллисекундах (например, 1000 миллисекунд = 1 секунда)
+                        const pauseDuration = 1000;
+                        // После заданной паузы выполняем incrementStatusHeader()
+                        setTimeout(() => {
+                        this.$store.commit('incrementStatusHeader');
+                        }, pauseDuration);
+                    })
+                    .catch(error => {
+                        console.error('Error in walletConnectAndIncrementStatusHeader:', error);
+                        // Обработайте ошибку по вашему усмотрению
+                    });
+                }
+            },
+            disconnectPage() {
+                console.log('disconnecting');
+                walletDisconnect();
+                this.setIsWeb3Login(false);
+                if (this.$route.path === '/') {
+                    // this.$router.go(0); // Если пользователь уже на главной, перезагрузить текущую страницу
+                    this.$store.commit('incrementStatusHeader');
+                } else {
+                    this.$store.commit('incrementStatusHeader');
+                    this.$router.replace('/'); // В противном случае перейти на главную
+                }
+                if (this.isAuth || this.$store.getters.getIsLogin) {
+                    this.goToLogoutPage();
+                }
+            },
+            goToProfilePage() {
+                this.$router.replace(`/profile/${this.userId}`);
+            },
+            goToTablesPage() {
+                this.$router.push('/tables');
+            },
+        },
+        computed: {
+            ...mapGetters(['isLogin', 'isWeb3Login', 'userActiveTable']),
+            truncatedNicknameText() {
+                try {
+                    // const buttonText = this.userList[this.userId] || '';
+                    const buttonText = this.headerUserNickname || '';
+                    if (buttonText.length > 16) {
+                        return buttonText.slice(0, 10) + '...' + buttonText.slice(-3);
+                    } else {
+                        return buttonText;
+                    }
+                }
+                catch {
+                    console.error('truncatedNicknameText Error')
+                    return ''; // Вернуть пустую строку или другое значение по умолчанию
+                }
+            },
+            truncatedAddressText() {
+                try {
+                    const buttonText = this.userAddress || '';
+                    if (buttonText.length > 16) {
+                        return buttonText.slice(0, 9) + '...' + buttonText.slice(-4);
+                    } else {
+                        return buttonText;
+                    }
+                }
+                catch {
+                    console.error('truncatedAddressText Error');
+                    return ''; // Вернуть пустую строку или другое значение по умолчанию
+                }
+            },
+        }
     }
 </script>
 
 <template>
-    <div class="mainbox">
+
+    <header class="p-3 text-bg-dark">
         <div class="container">
-            <div class="left">
-                <div>
-                    <img @click="goToHomePage" class="clickimage" src="/images/logo.png" alt="AZI Online">
+            <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+
+                <div class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
+                    <!-- <div>{{ this.$store.getters.getStatusHeader }}</div> -->
+                    <img @click="goToHomePage" class="link_button" src="/images/logo.png" alt="AZI Online">
                 </div>
-            </div>
-            <div class="center">
-                <ul class="nav">
-                    <li>Play now</li>
-                    <li>Game Rules</li>
-                    <li>Top Players</li>
-                    <li>About Us</li>
-                    <li @click="goToAddPostPage">Add Post</li>
-                    <li @click="goToDeletePostPage">Delete post</li>
+
+                <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+                    <li @click="goToTablesPage" class="btn btn-success">Play Now</li>
+                    <li @click="goToGameRules" class="nav-link px-2 text-white link_button">Game Rules</li>
+                    <!-- <li class="nav-link px-2 text-white link_button">Log {{ this.$store.getters.getIsLogin }}</li>
+                    <li class="nav-link px-2 text-white link_button">W3 {{ this.$store.getters.getIsWeb3Login }}</li> -->
+                    <li @click="webSocketTest" class="nav-link px-2 text-white link_button">Top Players</li>
+                    <li class="nav-link px-2 text-white link_button">About Us</li>
+                    <li v-if="isAuth && userId == 3" @click="goToAddPostPage" class="nav-link px-2 text-white link_button">Add Post</li>
+                    <li v-if="isAuth && userId == 3" @click="goToDeletePostPage" class="nav-link px-2 text-white link_button">Delete post</li>
                 </ul>
-            </div>
-            <div class="right">
-                <ul class="userbuttons">
-                    <li>Table#</li>
-                    <li>UserName</li>
-                    <li>Login</li>
-                    <li>Logout</li>
-                    <li>Web3 Wallet</li>
-                </ul>
+
+                <div class="text-end">
+                    <button type="button" class="btn btn-primary me-2" v-if="(isAuth || isWeb3Auth) && (userActiveTable) && (userActiveTable != 0)" @click="goToActiveTable"> Table {{ userActiveTable }} </button>
+                    <button type="button" class="btn btn-outline-primary me-2" v-if="isAuth || isWeb3Auth" @click="goToProfilePage"> {{ truncatedNicknameText }} </button>
+                    <button type="button" class="btn btn-outline-light me-2" v-if="!isAuth && !isWeb3Auth" @click="goToRegisterPage">Sign-up</button>
+                    <button type="button" class="btn btn-outline-light me-2" v-if="!isAuth && !isWeb3Auth" @click="goToLoginPage">Login</button>
+                    <button type="button" class="btn btn-outline-light me-2" v-if="isAuth  && !isWeb3Auth" @click="goToLogoutPage">Logout</button>
+                    <button type="button" class="btn btn-outline-warning me-2" v-if="!isWeb3Auth" @click="walletConnectPage">Metamask</button>
+                    <button type="button" class="btn btn-warning me-2" v-if="isWeb3Auth && !isHovered" @mouseover="isHovered = true"> {{ truncatedAddressText }} </button>
+                    <button type="button" class="btn btn-danger me-2" v-if="isWeb3Auth && isHovered" @mouseout="isHovered = false" @click="disconnectPage"> Disconnect Wallet </button>
+                </div>
+
             </div>
         </div>
-    </div>
+    </header>
+
 </template>
 
 <style scoped>
-
-.mainbox {
-    display: flex;
-    padding: 0;
-    margin: 0;
-    justify-content: center;
-    align-items: center;
-    background: #222;
-    color: aliceblue;
-    font-size: 16px;
-}
-.container {
-    display: flex;
-    width: 1280px;
-    justify-content: center;
-    align-items: center;
-    padding: 5px;
-}
-
-.left {
-    display: flex;
-    flex: 15%;
-    justify-content: center;
-    align-items: center;
-}
-
-.center {
-    flex: 45%;
-}
-
-.right {
-    flex: 40%;
-}
-
-.nav {
-    list-style-type: none; /* Убираем маркеры (круглишки) */
-    padding: 0; /* Убираем внутренний отступ */
-    margin: 0; /* Убираем внешний отступ */
-    display: flex; /* Устанавливаем flex-контейнер */
-}
-
-.nav li {
-    margin-right: 20px; /* Добавляем небольшой отступ между элементами */
+.link_button {
     cursor: pointer;
 }
-
-.userbuttons {
-    list-style-type: none; /* Убираем маркеры (круглишки) */
-    padding: 0; /* Убираем внутренний отступ */
-    margin: 0; /* Убираем внешний отступ */
-    display: flex; /* Устанавливаем flex-контейнер */
-    justify-content: flex-end; /* Выравниваем элементы по правому краю */
-}
-
-.userbuttons li {
-    margin-left: 10px; /* Добавляем небольшой отступ между элементами */
-    cursor: pointer;
-}
-
-.clickimage {
-    cursor: pointer;
-}
-
 </style>

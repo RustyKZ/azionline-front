@@ -6,13 +6,12 @@
         data() {
             return {
                 posts: [],
-                // baseUrl: process.env.BASE_URL
-                baseUrl: 'http://127.0.0.1:8000'
+                baseUrl: this.$root.serverUrl,
             };
         },
         mounted() {
         // Здесь мы делаем GET-запрос к нашему Flask API, чтобы получить данные
-        axios.get(`${this.baseUrl}/getarticles`)
+        axios.get(`${this.baseUrl}/API/getarticles`)
             .then(response => {
             this.posts = response.data;
             console.log(this.posts);
@@ -56,7 +55,9 @@
     width: 1280px;
     justify-content: center;
     align-items: center;
-    padding: 5px;
+    padding: 30px;
+    margin: 20px;
+    background: white;
 }
 
 .img-container {
