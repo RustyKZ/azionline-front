@@ -36,7 +36,8 @@ export default {
                 currentgame: 0,
                 players_now: 0,
                 sort_index: 0,
-                time_stop: 0
+                time_stop: 0,
+                interval: 0,
             },
             game:{
                 id: 0,
@@ -62,6 +63,8 @@ export default {
                 speaker: 0,
                 speaker_id: 0,
                 stage: 0,
+                lastdeal: 0,
+
             },
             leaveData:{
                 user_id: 0,
@@ -118,7 +121,11 @@ export default {
             dropsuit: ['/images/192-spades.png','/images/192-clubs.png','/images/192-diamonds.png','/images/192-hearts.png'],
             cardHeight: 110,
             droppedSuit: ['None','Spades','Clubs','Diamonds','Hearts'],
-            cardRivalImagePath: ['/images/1_0cards.png', '/images/1_1cards.png', '/images/1_2cards.png', '/images/1_3cards.png', '/images/1_4cards.png'],            
+            cardRivalImagePath: ['/images/1_0cards.png', '/images/1_1cards.png', '/images/1_2cards.png', '/images/1_3cards.png', '/images/1_4cards.png'],
+            progressValue: 0,
+            progressWidth: 0,
+            progressElapsed: 0,
+            timer: null,
         };
     },
 
@@ -146,6 +153,7 @@ export default {
         const divElement = this.$refs.userCardDiv;
         this.cardHeight = Math.floor(divElement.getBoundingClientRect().height);
         console.log(`Высота div: ${this.cardHeight}px`);
+        this.startProgressBar()
     },
 
     methods: {
@@ -168,7 +176,8 @@ export default {
                 currentgame: data[1].table.currentgame,
                 players_now: data[1].table.players_now,
                 sort_index: data[1].table.sort_index,
-                time_stop: data[1].table.time_stop
+                time_stop: data[1].table.time_stop,
+                interval: data[1].table.interval
             }
             this.game = {
                 id: data[1].game.id,
@@ -193,7 +202,8 @@ export default {
                 cards_now: data[1].game.cards_now,
                 speaker: data[1].game.speaker,
                 speaker_id: data[1].game.speaker_id,
-                stage: data[1].game.stage
+                stage: data[1].game.stage,
+                lastdeal: data[1].game.lastdeal
             }
             this.playerBalance = data[1].balance;
             this.playerGameStatus = data[1].game_status;
@@ -340,7 +350,44 @@ export default {
                     .catch(error => {
                     console.error('Error logout user:', error);
                 })
-        }
+        },
+        startProgressBar() {
+            console.log('START PROGRESSBAR', this.game.lastdeal,' - LastDeal', this.table.interval,' - Interval')
+            this.timer = setInterval(() => {
+                
+                // Рассчитываем, сколько времени прошло с момента lastdeal до текущего момента
+                const currentTime = Math.floor(new Date().getTime() / 1000); // Текущее время в секундах
+                const elapsed = currentTime - this.game.lastdeal;
+                // Рассчитываем прогресс в процентах
+                const progress = (elapsed / this.table.interval) * 100;
+                // Обновляем переменные в данных и шаблоне
+                this.progressValue = Math.min(progress, 100);
+                this.progressElapsed = elapsed;
+                this.progressWidth = `${this.progressValue}%`;
+                // Если прошло достаточно времени, останавливаем интервал и вызываем defaultAction()
+                if (elapsed >= this.table.interval) {
+                    clearInterval(this.timer);
+                    this.defaultAction();
+                }
+                console.log('Progress is', progress, 'CurrentTime is', currentTime)
+
+            }, 1000); // Обновление каждую секунду
+        },
+
+        defaultAction() {
+            const data = {table_id: this.table.id, game_id: this.game.id, user_id: this.thisUserID}
+            if (this.game.speaker_id == this.thisUserID) {
+                axios.post(this.baseUrl + '/API/new_speaker', data)
+                    .then(response => {
+                        console.log('New Speaker recieve from server', response);                
+                    })
+                    .catch(error => {
+                    console.error('Error logout user:', error);
+                })
+            }
+            this.startProgressBar();
+            // Ваша логика для defaultAction
+        },
 
     },
 
@@ -416,8 +463,10 @@ export default {
                             <!-- Верхний ряд 4/4 из 3 -  строка прогресса времени соперников -->
                             <div class="row align-items-end, main" style="height: 10%; grid; place-items: center;">
                                 <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">
-                                    <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+                                    <div v-if="game.speaker_id == rival">
+                                    <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="progressValue" aria-valuemin="0" aria-valuemax="100">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" :style="{ width: progressWidth }">{{ this.table.interval - progressElapsed }}</div>
+                                    </div>
                                     </div>
                                 </div>
                             </div>
@@ -545,7 +594,10 @@ export default {
                                             <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 75px; position: absolute; bottom: 0; left: 0">
                                             <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 90px; position: absolute; bottom: 0; left: 0">
                                         </div>
-                                        <div class="col-6">
+                                        <div class="col-6 d-flex align-items-center justify-content-center">
+                                        <!--  Тестовый прогрессбар -->            
+                                        
+
                                         </div>
                                     </div>
                                 </div>
@@ -625,9 +677,9 @@ export default {
                                 <div class="container" style="height: 100%; width: 100%;">
                                     <!-- 1/3 строка 3 колонки нижнего ряда - прогресс бар времени пользователя                     -->
                                     <div class="row align-items-center justify-content-center" style="height: 33%;">
-                                        <div class="justify-content-center" style="width: 80%">
-                                            <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
-                                                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+                                        <div v-if="game.speaker_id == this.thisUserID" class="justify-content-center" style="width: 80%">
+                                            <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="progressValue" aria-valuemin="0" aria-valuemax="100">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" :style="{ width: progressWidth }">{{ this.table.interval - progressElapsed }}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -677,7 +729,7 @@ export default {
                                         <div style="height: 50%; display: flex; justify-content: center; align-items: center;">
                                             <div class="d-flex flex-wrap align-items-center justify-content-center w-100">
                                                 <input type="submit" class="btn btn-secondary flex-grow-1 m-2" value="Pass">
-                                                <input type="submit" id='drop_button' class="btn btn-warning flex-grow-1 m-2" value="Drop">
+                                                <input type="submit" @click="startProgressBar" class="btn btn-warning flex-grow-1 m-2" value="Drop">
                                                 <input type="submit" @click="startNewGame" class="btn btn-danger flex-grow-1 m-2" value="New game">
                                             </div>
                                         </div>
@@ -728,7 +780,7 @@ export default {
                             <!-- Сброшенная масть -->
                             <div v-if="table.drop_suit != 0" class="col-4 d-flex justify-content-center align-items-center">
                                 <div style="width: 80%">
-                                    <img :src="dropsuit[table.drop_suit]" style="width: 100%;">
+                                    <img :src="dropsuit[table.drop_suit-1]" style="width: 100%;">
                                 </div>
                             </div>
 
