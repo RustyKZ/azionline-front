@@ -68,6 +68,7 @@ export default {
                 table_id: 0,
             },
             cardImagePath:[
+                '/images/empty_card.png',
                 '/images/220-cads-deck01.png', 
                 '/images/220-cads-deck02.png', 
                 '/images/220-cads-deck03.png', 
@@ -113,9 +114,11 @@ export default {
             rivStr: [],
             playerPos: 0,
             playerBalance: 0,
+            playerGameStatus: 1,
             dropsuit: ['/images/192-spades.png','/images/192-clubs.png','/images/192-diamonds.png','/images/192-hearts.png'],
             cardHeight: 110,
-            droppedSuit: ['None','Spades','Clubs','Diamonds','Hearts']
+            droppedSuit: ['None','Spades','Clubs','Diamonds','Hearts'],
+            cardRivalImagePath: ['/images/1_0cards.png', '/images/1_1cards.png', '/images/1_2cards.png', '/images/1_3cards.png', '/images/1_4cards.png'],            
         };
     },
 
@@ -193,6 +196,7 @@ export default {
                 stage: data[1].game.stage
             }
             this.playerBalance = data[1].balance;
+            this.playerGameStatus = data[1].game_status;
             // Определение позиции пользователя за чтолом
             this.playerPos = 0;
             for (let i = 0; i < this.table.max_players; i++) {
@@ -314,7 +318,30 @@ export default {
                 return '';
             }
             return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        },
+        getPosition(playerID) {
+            let plPos = 0;
+            for (let i = 0; i < this.table.max_players; i++) {
+                if (this.table.players[i] == playerID) {
+                    plPos = i + 1;
+                    break
+                }            
+            }
+            console.log('', this.table.players)
+            return plPos;
+        },
+        startNewGame() {
+            console.log('New game button pressed');
+            const data = {table_id: this.table.id}
+            axios.post(this.baseUrl + '/API/new_game', data)
+                    .then(response => {
+                        console.log('New game started', response);                
+                    })
+                    .catch(error => {
+                    console.error('Error logout user:', error);
+                })
         }
+
     },
 
     computed: {
@@ -328,7 +355,6 @@ export default {
 </script>
 
 <template>
-
     <main>
     <div style="height: 95vh">
         <div class="row" style="height: 100%;">
@@ -339,11 +365,11 @@ export default {
                     <!-- Верхний ряд 1 из 3  -->
                     <div class="row align-items-center mt-2" style="height: 25%">
 
-                        <div class="container" style="height: 100%; background: #892FF1; margin-left: 10px">
+                        <div class="container" style="height: 100%; margin-left: 10px">
 
-                            <!-- Верхний ряд 1/3 из 3 - Имена соперников -->
-                            <div class="row align-items-center, main" style="height: 15%; background: green;">
-                                <div v-for="rival in this.rivals" :key="rival" class="col align-items-center" :style="{ background: `#${rival * 1333}` }">
+                            <!-- Верхний ряд 1/4 из 3 - Имена соперников -->
+                            <div class="row align-items-center, main" style="height: 15%;">
+                                <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">
                                     <div class="align-items-center">
                                         <div v-if="game.speaker_id == rival" class="main rounded-3" style=" background: blue; text-align: center; vertical-align: middle">
                                             <b style="color: aliceblue;">{{ rival }} - </b>
@@ -358,19 +384,42 @@ export default {
                                 </div>
                             </div>
                             
-                            <!-- Верхний ряд 2/3 из 3 - карты соперников -->
+                            <!-- Верхний ряд 2/4 из 3 - карты соперников -->
 
-                            <div class="row align-items-center, main" style="height: 45%; background: #a2fef3;">
-                                
+                            <div class="row align-items-center, main" style="height: 54%;">
+                                <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">
+                                    <div class="row">
+                                        <div class="col-8">
+                                            <img class="my-1" :src="cardRivalImagePath[4]" style="height: 12vh; margin-left: 0px; position: absolute;">
+                                        </div>
+                                        <div class="col-4 align-items-end">
+                                            <img class="my-1" :src="cardImagePath[25]" style="height: 12vh; margin-left: 0px; position: absolute;">
+                                        </div>                                        
+                                    </div>
+                                </div>  
                             </div>
-
-                            <div class="row align-items-center, main" style="height: 30%; background: #ef3;">
-                                
+                            <!-- Верхний ряд 3/4 из 3 - Реплики соперников -->
+                            <div class="row align-items-center, main" style="height: 21%;">
+                                <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">
+                                    <div class="row" style="height:100%">
+                                        <div class="col-9">
+                                            <div class="d-flex align-items-center rounded-3 mb-1 w-100" style="height:90%; background:white">
+                                                <h6 style="color: black">User says:</h6>
+                                            </div>
+                                        </div>
+                                        <div class="col-3 align-middle">                  
+                                            <h3 class="text-center align-middle" style=""><b>2</b></h3>
+                                        </div>                                        
+                                    </div>
+                                </div>                                
                             </div>
-
-                            <!-- Верхний ряд 3/3 из 3 -  строка прогресса времени соперников -->
-                            <div class="row align-items-end, main" style="height: 10%; grid; place-items: center">
-
+                            <!-- Верхний ряд 4/4 из 3 -  строка прогресса времени соперников -->
+                            <div class="row align-items-end, main" style="height: 10%; grid; place-items: center;">
+                                <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">
+                                    <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -409,20 +458,20 @@ export default {
                                         <div v-for="rival in this.rivals" :key="rival" class="col align-items-center" :style="{ background: `#${rival * 112}` }">
                                             <div class="row" >
                                                 <div class="col-1">                                         
-                                                    <img class="my-1 blurred-image" :src="cardImagePath[25]" style="height: 15vh; margin-left: 0px; position: absolute;">
+                                                    <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 0px; position: absolute;">
                                                     <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 15px; position: absolute;">
                                                     <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 30px; position: absolute;">
                                                     <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 45px; position: absolute;">
                                                     <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 60px; position: absolute;">
-                                                    <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 75px; position: absolute;">                                                
+                                                    <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 75px; position: absolute;">
                                                 </div>
                                                 <div class="col-1" style="margin-top: 35px">
-                                                    <img class="my-1 blurred-image" :src="cardImagePath[25]" style="height: 15vh; margin-left: 0px; margin-top: 20px; position: absolute;">
-                                                    <img class="my-1 blurred-image" :src="cardImagePath[25]" style="height: 15vh; margin-left: 15px; margin-top: 20px; position: absolute;">
-                                                    <img class="my-1 blurred-image" :src="cardImagePath[25]" style="height: 15vh; margin-left: 30px; margin-top: 20px; position: absolute;">
-                                                    <img class="my-1 blurred-image" :src="cardImagePath[25]" style="height: 15vh; margin-left: 45px; margin-top: 20px; position: absolute;">
-                                                    <img class="my-1 blurred-image" :src="cardImagePath[25]" style="height: 15vh; margin-left: 60px; margin-top: 20px; position: absolute;">
-                                                    <img class="my-1 blurred-image" :src="cardImagePath[25]" style="height: 15vh; margin-left: 75px; margin-top: 20px; position: absolute;">
+                                                    <img class="my-1 " :src="cardImagePath[25]" style="height: 15vh; margin-left: 0px; margin-top: 20px; position: absolute;">
+                                                    <img class="my-1 " :src="cardImagePath[25]" style="height: 15vh; margin-left: 15px; margin-top: 20px; position: absolute;">
+                                                    <img class="my-1 " :src="cardImagePath[25]" style="height: 15vh; margin-left: 30px; margin-top: 20px; position: absolute;">
+                                                    <img class="my-1 " :src="cardImagePath[25]" style="height: 15vh; margin-left: 45px; margin-top: 20px; position: absolute;">
+                                                    <img class="my-1 " :src="cardImagePath[25]" style="height: 15vh; margin-left: 60px; margin-top: 20px; position: absolute;">
+                                                    <img class="my-1 " :src="cardImagePath[25]" style="height: 15vh; margin-left: 75px; margin-top: 20px; position: absolute;">
                                                 </div>
                                                 <div class="col-1" style="margin-top: 70px">
                                                     <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 0px; margin-top: 40px; position: absolute;">
@@ -505,10 +554,10 @@ export default {
                                     <div class="row align-items-start text-center" style="height: 33%;">
                                     </div>
                                     <div class="row" style="height: 34%;">
-                                        <div class="container">                                            
-                                            <img class="" src="/images/1_1cards.png" style="height: 15vh; position: absolute;">
-                                            <img class="m-1" src="/images/1_1cards.png" style="height: 15vh; position: absolute;">
-                                            <img class="m-2" :src="cardImagePath[24]" style="height: 15vh; position: absolute;">
+                                        <div v-if="this.game.stage != 0" class="container">                                            
+                                            <img class="" src="/images/empty_card.png" style="height: 15vh; position: absolute;">
+                                            <img class="m-1" src="/images/empty_card.png" style="height: 15vh; position: absolute;">
+                                            <img class="m-2" :src="cardImagePath[this.game.card_players[0]]" style="height: 15vh; position: absolute;">
                                         </div>
 
                                     </div>
@@ -563,9 +612,9 @@ export default {
                         <!--    2 колонка нижнего ряда - карты пользователя-->
                         <div class="col" style="display: grid; place-items: center">
                                 <div ref="userCardDiv" class="row" style="height:100%; overflow: hidden;">
-                                    <div v-for="myCard in [0, 1, 2, 3]" :key="myCard" class="col" style="padding: 0; margin:0; height:100%">
-                                        <div v-if="(this.game.card_players[(playerPos-1)*4 + myCard]) !=0" style="padding: 0; margin:0; height: 100%;">
-                                            <img :src="cardImagePath[this.game.card_players[(playerPos-1)*4 + myCard]-1]" :style="{ height: `${this.cardHeight}px` }">
+                                    <div v-for="myCard in [1, 2, 3, 4]" :key="myCard" class="col" style="padding: 0; margin:0; height:100%">
+                                        <div v-if="((this.game.card_players[(playerPos-1)*4 + myCard]) !=0) && (this.playerGameStatus > 1)" style="padding: 0; margin:0; height: 100%;">
+                                            <img :src="cardImagePath[this.game.card_players[(playerPos-1)*4 + myCard ]]" :style="{ height: `${this.cardHeight}px` }">
                                         </div>
                                     </div>
                                 </div>
@@ -575,10 +624,11 @@ export default {
                             <div class="main" style="display: flex; justify-content: center; align-items: center; height: 100%; width: 100%">
                                 <div class="container" style="height: 100%; width: 100%;">
                                     <!-- 1/3 строка 3 колонки нижнего ряда - прогресс бар времени пользователя                     -->
-                                    <div class="row align-items-start, main" style="height: 33%; display: grid; place-items: center;">
-                                        <div style="height: 50%; display: flex; justify-content: center; align-items: center;">
-
-
+                                    <div class="row align-items-center justify-content-center" style="height: 33%;">
+                                        <div class="justify-content-center" style="width: 80%">
+                                            <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+                                            </div>
                                         </div>
                                     </div>
                                     <!--                      Кнопки для ставок -->
@@ -628,7 +678,7 @@ export default {
                                             <div class="d-flex flex-wrap align-items-center justify-content-center w-100">
                                                 <input type="submit" class="btn btn-secondary flex-grow-1 m-2" value="Pass">
                                                 <input type="submit" id='drop_button' class="btn btn-warning flex-grow-1 m-2" value="Drop">
-                                                <input type="submit" id='new_game_button' class="btn btn-danger flex-grow-1 m-2" value="New game">
+                                                <input type="submit" @click="startNewGame" class="btn btn-danger flex-grow-1 m-2" value="New game">
                                             </div>
                                         </div>
                                     </div>
@@ -687,10 +737,10 @@ export default {
                         <hr style="color: green">
 
                         <div v-if="this.game.speaker_id == this.thisUserID" class="d-flex justify-content-between align-items-center rounded-3 my-1" style="background: blue">
-                            <h5 class="ms-2 mt-1 align-self-center text-white" style="color: aliceblue;"><b>{{ playerNames[this.thisUserID] }}</b></h5>                            
+                            <h5 class="ms-2 mt-1 align-self-center text-white" style="color: aliceblue;"><b>{{ playerNames[this.thisUserID] }} - {{ this.playerGameStatus }}</b></h5>                            
                         </div>
                         <div v-else class="d-flex justify-content-between align-items-center rounded-3 my-1" style="background: indigo">
-                            <h5 class="ms-2 mt-1 align-self-center text-white" style="color: aliceblue;"><b>{{ playerNames[this.thisUserID] }}</b></h5>                            
+                            <h5 class="ms-2 mt-1 align-self-center text-white" style="color: aliceblue;"><b>{{ playerNames[this.thisUserID] }} - {{ this.playerGameStatus }}</b></h5>                            
                         </div>
                         
                         <hr style="color: green">
