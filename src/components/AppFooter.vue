@@ -26,11 +26,12 @@
             </div>
 
             <ul class="nav col-md-3 justify-content-end list-unstyled d-flex">
-                <li class="ms-3"><a class="text-body-secondary" href="#"><img src="/images/36-discord.png" class="bi" width="36" height="36"></a></li>
-                <li class="ms-3"><a class="text-body-secondary" href="#"><img src="/images/36-reddit.png" class="bi" width="36" height="36"></a></li>
-                <li class="ms-3"><a class="text-body-secondary" href="#"><img src="/images/36-x.png" class="bi" width="36" height="36"></a></li>
-                <li class="ms-3"><a class="text-body-secondary" href="#"><img src="/images/36-facebook.png" class="bi" width="36" height="36"></a></li>
-                <li class="ms-3"><a class="text-body-secondary" href="#"><img src="/images/36-instagram.png" class="bi" width="36" height="36"></a></li>
+                <li class="me-2"><a class="text-body-secondary" href="#"><img src="/images/36-discord.png" class="bi" width="36" height="36"></a></li>
+                <li class="me-2"><a class="text-body-secondary" href="#"><img src="/images/36-reddit.png" class="bi" width="36" height="36"></a></li>
+                <li class="me-2"><a class="text-body-secondary" href="#"><img src="/images/36-telegram.png" class="bi" width="36" height="36"></a></li>
+                <li class="me-2"><a class="text-body-secondary" href="#"><img src="/images/36-x.png" class="bi" width="36" height="36"></a></li>
+                <li class="me-2"><a class="text-body-secondary" href="#"><img src="/images/36-facebook.png" class="bi" width="36" height="36"></a></li>
+                <li class="me-2"><a class="text-body-secondary" href="#"><img src="/images/36-instagram.png" class="bi" width="36" height="36"></a></li>
             </ul>
           </footer>
         </div>

@@ -2,11 +2,15 @@
 import axios from 'axios';
 import { mapGetters, mapMutations } from 'vuex';
 import { checkLogin } from './auth.js';
-import { checkWeb3 } from './wallet_connect.js'
+import { checkWeb3 } from './wallet_connect.js';
+
 
 
 export default {
     name: 'PlayingTablePage',
+    components: {
+
+    },
     data() {
         return {
             playerNames: [],
@@ -53,17 +57,18 @@ export default {
                 end_game: null,
                 winner: 0,
                 lastgame: 0,
-                card_deck: ['1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1'],
-                card_players: ['0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0'],
-                card_place1: ['0, 0, 0, 0, 0, 0'],
-                card_place2: ['0, 0, 0, 0, 0, 0'],
-                card_place3: ['0, 0, 0, 0, 0, 0'],
-                card_place: ['0, 0, 0, 0, 0, 0'],
-                cards_now: ['0, 0, 0, 0, 0, 0'],
+                card_deck: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                card_players: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                card_place1: [0, 0, 0, 0, 0, 0],
+                card_place2: [0, 0, 0, 0, 0, 0],
+                card_place3: [0, 0, 0, 0, 0, 0],
+                card_place: [0, 0, 0, 0, 0, 0],
+                cards_now: [0, 0, 0, 0, 0, 0],
                 speaker: 0,
                 speaker_id: 0,
                 stage: 0,
                 lastdeal: 0,
+                players_bet: [0, 0, 0, 0, 0, 0]
 
             },
             leaveData:{
@@ -109,6 +114,50 @@ export default {
                 '/images/220-cads-deck35.png', 
                 '/images/220-cads-deck36.png',
                 '/images/220-empty.png'],
+            cards: [
+                { name: 'Card 01', image: '/images/220-cads-deck01.png' },
+                { name: 'Card 02', image: '/images/220-cads-deck02.png' },
+                { name: 'Card 03', image: '/images/220-cads-deck03.png' },
+                { name: 'Card 04', image: '/images/220-cads-deck04.png' },
+                { name: 'Card 05', image: '/images/220-cads-deck05.png' },
+                { name: 'Card 06', image: '/images/220-cads-deck06.png' },
+                { name: 'Card 07', image: '/images/220-cads-deck07.png' },
+                { name: 'Card 08', image: '/images/220-cads-deck08.png' },
+                { name: 'Card 09', image: '/images/220-cads-deck09.png' },
+                { name: 'Card 10', image: '/images/220-cads-deck10.png' },
+                { name: 'Card 11', image: '/images/220-cads-deck11.png' },
+                { name: 'Card 12', image: '/images/220-cads-deck12.png' },
+                { name: 'Card 13', image: '/images/220-cads-deck13.png' },
+                { name: 'Card 14', image: '/images/220-cads-deck14.png' },
+                { name: 'Card 15', image: '/images/220-cads-deck15.png' },
+                { name: 'Card 16', image: '/images/220-cads-deck16.png' },
+                { name: 'Card 17', image: '/images/220-cads-deck17.png' },
+                { name: 'Card 18', image: '/images/220-cads-deck18.png' },
+                { name: 'Card 19', image: '/images/220-cads-deck19.png' },
+                { name: 'Card 20', image: '/images/220-cads-deck20.png' },
+                { name: 'Card 21', image: '/images/220-cads-deck21.png' },
+                { name: 'Card 22', image: '/images/220-cads-deck22.png' },
+                { name: 'Card 23', image: '/images/220-cads-deck23.png' },
+                { name: 'Card 24', image: '/images/220-cads-deck24.png' },
+                { name: 'Card 25', image: '/images/220-cads-deck25.png' },
+                { name: 'Card 26', image: '/images/220-cads-deck26.png' },
+                { name: 'Card 27', image: '/images/220-cads-deck27.png' },
+                { name: 'Card 28', image: '/images/220-cads-deck28.png' },
+                { name: 'Card 29', image: '/images/220-cads-deck29.png' },
+                { name: 'Card 30', image: '/images/220-cads-deck30.png' },
+                { name: 'Card 31', image: '/images/220-cads-deck31.png' },
+                { name: 'Card 32', image: '/images/220-cads-deck32.png' },
+                { name: 'Card 33', image: '/images/220-cads-deck33.png' },
+                { name: 'Card 34', image: '/images/220-cads-deck34.png' },
+                { name: 'Card 35', image: '/images/220-cads-deck35.png' },
+                { name: 'Card 36', image: '/images/220-cads-deck36.png' }
+            ],
+            cards1: [
+                { name: 'Card 01', image: '/images/220-cads-deck01.png' },
+                { name: 'Card 02', image: '/images/220-cads-deck02.png' },
+                { name: 'Card 03', image: '/images/220-cads-deck03.png' },
+                { name: 'Card 04', image: '/images/220-cads-deck04.png' }
+            ],
             roomId: '',
             isAuth: false,
             isWeb3Auth: false,
@@ -117,7 +166,7 @@ export default {
             rivStr: [],
             playerPos: 0,
             playerBalance: 0,
-            playerGameStatus: 1,
+            playerGameStatus: 0,
             dropsuit: ['/images/192-spades.png','/images/192-clubs.png','/images/192-diamonds.png','/images/192-hearts.png'],
             cardHeight: 110,
             droppedSuit: ['None','Spades','Clubs','Diamonds','Hearts'],
@@ -126,6 +175,8 @@ export default {
             progressWidth: 0,
             progressElapsed: 0,
             timer: null,
+            statusColor: ['Silver', 'Maroon', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo'],
+            playerStatuses: [0, 0, 0, 0, 0, 0]
         };
     },
 
@@ -146,6 +197,8 @@ export default {
         this.tableRequest.table_id = this.tableId;
         this.tableRequest.table_password = '';
         this.getTable()
+        this.setActiveTable(this.table.id);
+        this.$store.commit('incrementStatusHeader');
         this.joinRoom(this.roomId);
         this.updateTablesHall();
         this.$socket.on('update_room', this.handleUpdateRoom); 
@@ -203,10 +256,12 @@ export default {
                 speaker: data[1].game.speaker,
                 speaker_id: data[1].game.speaker_id,
                 stage: data[1].game.stage,
-                lastdeal: data[1].game.lastdeal
+                lastdeal: data[1].game.lastdeal,
+                players_bet: data[1].game.players_bet
             }
             this.playerBalance = data[1].balance;
             this.playerGameStatus = data[1].game_status;
+
             // Определение позиции пользователя за чтолом
             this.playerPos = 0;
             for (let i = 0; i < this.table.max_players; i++) {
@@ -235,9 +290,8 @@ export default {
             });
 
             this.playerNames = data[1].player_names;
+            this.playerStatuses = data[1].player_statuses
             localStorage.setItem('user_active_table', this.table.id);
-            this.setActiveTable(this.table.id);
-            this.$store.commit('incrementStatusHeader');
         })
         .catch(error => {
             console.error('Ошибка при получении данных:', error);
@@ -251,14 +305,12 @@ export default {
             axios.post(`${this.baseUrl}/API/leave_table`,this.leaveData)
             .then(response => {
                 this.updateTablesHall();
-                
                 this.leaveRoom(this.roomId);
                 this.setActiveTable(0);
                 localStorage.removeItem('user_active_table');
                 this.$router.replace(`/tables`);
                 console.log('METHOD leaveTable: ', response)
                 this.$store.commit('incrementStatusHeader');
-
                 this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
             })
             .catch(error => {
@@ -352,9 +404,7 @@ export default {
                 })
         },
         startProgressBar() {
-            console.log('START PROGRESSBAR', this.game.lastdeal,' - LastDeal', this.table.interval,' - Interval')
-            this.timer = setInterval(() => {
-                
+            this.timer = setInterval(() => {             
                 // Рассчитываем, сколько времени прошло с момента lastdeal до текущего момента
                 const currentTime = Math.floor(new Date().getTime() / 1000); // Текущее время в секундах
                 const elapsed = currentTime - this.game.lastdeal;
@@ -366,27 +416,60 @@ export default {
                 this.progressWidth = `${this.progressValue}%`;
                 // Если прошло достаточно времени, останавливаем интервал и вызываем defaultAction()
                 if (elapsed >= this.table.interval) {
-                    clearInterval(this.timer);
+                    console.log('CLEAR INTERVAL and DEFAULT ACTION');
                     this.defaultAction();
+                    clearInterval(this.timer);                                                   
                 }
-                console.log('Progress is', progress, 'CurrentTime is', currentTime)
-
             }, 1000); // Обновление каждую секунду
         },
 
         defaultAction() {
-            const data = {table_id: this.table.id, game_id: this.game.id, user_id: this.thisUserID}
-            if (this.game.speaker_id == this.thisUserID) {
+            const data = {table_id: this.table.id, game_id: this.game.id, user_id: this.thisUserID, current_speaker: this.game.speaker_id}
+            console.log('TRY TO DEFAULT ACTION')
                 axios.post(this.baseUrl + '/API/new_speaker', data)
                     .then(response => {
-                        console.log('New Speaker recieve from server', response);                
+                        console.log('New Speaker recieve from server', response.data.message);
+                        this.startProgressBar();
                     })
                     .catch(error => {
                     console.error('Error logout user:', error);
                 })
-            }
-            this.startProgressBar();
+            
+            
             // Ваша логика для defaultAction
+        },
+        bettingRaise(bet) {
+            console.log('BETTING RAISE ', bet);
+        },
+        bettingBet(bet) {
+            console.log('BETTING BET ', bet);
+        },
+        bettingCall() {
+            console.log('BETTING CALL ');
+        },
+        bettingDrop() {
+            console.log('BETTING DROP ');
+        },
+        bettingPass() {
+            console.log('BETTING PASS ');
+        },
+        bettingBlind(bet) {
+            console.log('BETTING BLIND ', bet);
+        },
+        dropThisPlayer() {
+            console.log('DROPPED');
+            alert('You are have not enough funds for playing!');
+            this.updateTablesHall();
+            this.leaveRoom(this.roomId);
+            this.setActiveTable(0);
+            localStorage.removeItem('user_active_table');
+            this.$router.replace(`/tables`);
+            this.$store.commit('incrementStatusHeader');
+            this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
+
+        },
+        testWindow() {
+            //this.$refs.CustomAlert.openAlert('Заголовок', 'Сообщение пользователю');
         },
 
     },
@@ -395,8 +478,17 @@ export default {
         ...mapGetters(['userActiveTable']),
         isRivalsQuantityEven() {
             return this.rivalsQuantity % 2 === 0;
-        }
-    }
+        },
+        currentPlayerStatus() {
+            console.log('Computed GAME STATUS ', this.playerGameStatus)
+            if (this.playerGameStatus == 1) {
+            this.dropThisPlayer();
+            }
+        // Мы возвращаем пустое значение, потому что computed свойства должны что-то возвращать
+        return this.playerGameStatus;
+        },
+    },
+
 }
 
 </script>
@@ -422,7 +514,7 @@ export default {
                                             <b style="color: aliceblue;">{{ rival }} - </b>
                                             <a :href="'/profile/' + rival" class="text-decoration-none" style="color: white"><b> {{ truncatedNicknameText(playerNames[rival]) }}</b></a>
                                         </div>
-                                        <div v-else class="main rounded-3" style=" background: indigo; text-align: center; vertical-align: middle">
+                                        <div v-else class="main rounded-3" :style="{ background: statusColor[playerStatuses[rival]] }" style="text-align: center; vertical-align: middle">
                                             <b style="color: aliceblue;">{{ rival }} - </b>
                                             <a :href="'/profile/' + rival" class="text-decoration-none" style="color: white"><b> {{ truncatedNicknameText(playerNames[rival]) }}</b></a>
                                         </div>
@@ -595,8 +687,10 @@ export default {
                                             <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 90px; position: absolute; bottom: 0; left: 0">
                                         </div>
                                         <div class="col-6 d-flex align-items-center justify-content-center">
-                                        <!--  Тестовый прогрессбар -->            
-                                        
+
+                                        <!--  Тестовый прогрессбар -->
+
+
 
                                         </div>
                                     </div>
@@ -646,7 +740,7 @@ export default {
                                         </div>
                                     </div>
                                     <div class="col-5 align-self-center">
-                                        <div class="d-flex justify-content-center align-items-center rounded-3" style="background: Chocolate">
+                                        <div @click="testWindow" class="d-flex justify-content-center align-items-center rounded-3" style="background: Chocolate">
                                             <h5 style="color: white">{{ textNumber(this.playerBalance) }}</h5>
                                         </div>  
                                     </div>
@@ -663,14 +757,15 @@ export default {
                         </div>
                         <!--    2 колонка нижнего ряда - карты пользователя-->
                         <div class="col" style="display: grid; place-items: center">
-                                <div ref="userCardDiv" class="row" style="height:100%; overflow: hidden;">
-                                    <div v-for="myCard in [1, 2, 3, 4]" :key="myCard" class="col" style="padding: 0; margin:0; height:100%">
-                                        <div v-if="((this.game.card_players[(playerPos-1)*4 + myCard]) !=0) && (this.playerGameStatus > 1)" style="padding: 0; margin:0; height: 100%;">
-                                            <img :src="cardImagePath[this.game.card_players[(playerPos-1)*4 + myCard ]]" :style="{ height: `${this.cardHeight}px` }">
-                                        </div>
+                            <div ref="userCardDiv" class="row" style="height:100%; overflow: hidden;">
+                                <div v-for="myCard in [1, 2, 3, 4]" :key="myCard" class="col" style="padding: 0; margin:0; height:100%">
+                                    <div v-if="((this.game.card_players[(playerPos-1)*4 + myCard]) !=0) && (this.playerGameStatus > 1)" style="padding: 0; margin:0; height: 100%;">
+                                        <img :src="cardImagePath[this.game.card_players[(playerPos-1)*4 + myCard ]]" :style="{ height: `${this.cardHeight}px` }">
                                     </div>
                                 </div>
+                            </div>
                         </div>
+
                         <!--    3 колонка нижнего ряда - кнопки пользователя-->
                         <div class="col" style="display: grid; place-items: center; height: 100%">
                             <div class="main" style="display: flex; justify-content: center; align-items: center; height: 100%; width: 100%">
@@ -690,36 +785,24 @@ export default {
                                                 <!-- <input type="submit" class="btn btn-primary flex-grow-1 m-2" value="Bet">-->
                                                 <!-- <input type="submit" class="btn btn-primary flex-grow-1 m-2" value="Raise">-->
                                                 <div class="btn-group dropup flex-grow-1">
-                                                    <button type="button" class="btn btn-primary dropdown-toggle flex-grow-1 m-2" data-bs-toggle="dropdown" aria-expanded="false">Bet</button>
+                                                    <button type="button" class="btn btn-primary dropdown-toggle flex-grow-1 m-1" data-bs-toggle="dropdown" aria-expanded="false">Blind</button>
                                                     <ul id="bet_button" class="dropdown-menu">
-                                                        <li><a class="dropdown-item" href="#">10</a></li>
-                                                        <li><a class="dropdown-item" href="#">9</a></li>
-                                                        <li><a class="dropdown-item" href="#">8</a></li>
-                                                        <li><a class="dropdown-item" href="#">7</a></li>
-                                                        <li><a class="dropdown-item" href="#">6</a></li>
-                                                        <li><a class="dropdown-item" href="#">5</a></li>
-                                                        <li><a class="dropdown-item" href="#">4</a></li>
-                                                        <li><a class="dropdown-item" href="#">3</a></li>
-                                                        <li><a class="dropdown-item" href="#">2</a></li>
-                                                        <li><a class="dropdown-item" href="#">1</a></li>
+                                                        <li v-for="myBlindBet in [5, 4, 3, 2, 1]" :key="myBlindBet" @click="bettingBlind(myBlindBet)"><a class="dropdown-item" href="#">{{ this.textNumber(this.table.min_bet * myBlindBet) }} (call {{ this.textNumber(this.table.min_bet * myBlindBet * 2) }})</a></li>
                                                     </ul>
                                                 </div>
                                                 <div class="btn-group dropup flex-grow-1">
-                                                    <button type="button" class="btn btn-primary dropdown-toggle flex-grow-1 m-2" data-bs-toggle="dropdown" aria-expanded="false">Raise</button>
-                                                    <ul id="raise_button" class="dropdown-menu">
-                                                        <li><a class="dropdown-item" href="#">10</a></li>
-                                                        <li><a class="dropdown-item" href="#">9</a></li>
-                                                        <li><a class="dropdown-item" href="#">8</a></li>
-                                                        <li><a class="dropdown-item" href="#">7</a></li>
-                                                        <li><a class="dropdown-item" href="#">6</a></li>
-                                                        <li><a class="dropdown-item" href="#">5</a></li>
-                                                        <li><a class="dropdown-item" href="#">4</a></li>
-                                                        <li><a class="dropdown-item" href="#">3</a></li>
-                                                        <li><a class="dropdown-item" href="#">2</a></li>
-                                                        <li><a class="dropdown-item" href="#">1</a></li>
+                                                    <button type="button" class="btn btn-primary dropdown-toggle flex-grow-1 m-1" data-bs-toggle="dropdown" aria-expanded="false">Bet</button>
+                                                    <ul id="bet_button" class="dropdown-menu">
+                                                        <li v-for="myBet in [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]" :key="myBet" @click="bettingBet(myBet)"><a class="dropdown-item" href="#">{{ this.textNumber(this.table.min_bet * myBet) }}</a></li>
                                                     </ul>
                                                 </div>
-                                                <input type="submit" class="btn btn-dark flex-grow-1 m-2" value="Call">
+                                                <div class="btn-group dropup flex-grow-1">
+                                                    <button type="button" class="btn btn-primary dropdown-toggle flex-grow-1 m-1" data-bs-toggle="dropdown" aria-expanded="false">Raise</button>
+                                                    <ul id="raise_button" class="dropdown-menu">
+                                                        <li v-for="myRaise in [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]" :key="myRaise" @click="bettingRaise(myRaise)"><a class="dropdown-item" href="#">{{ this.textNumber(this.table.min_bet * myRaise) }}</a></li>
+                                                    </ul>
+                                                </div>
+                                                <input type="submit" @click="bettingCall" class="btn btn-dark flex-grow-1 m-1" value="Call">
                                             </div>
                                         </div>
                                     </div>
@@ -728,9 +811,9 @@ export default {
                                     <div class="row align-items-center, main" style="height: 34%; display: grid; place-items: center;" >
                                         <div style="height: 50%; display: flex; justify-content: center; align-items: center;">
                                             <div class="d-flex flex-wrap align-items-center justify-content-center w-100">
-                                                <input type="submit" class="btn btn-secondary flex-grow-1 m-2" value="Pass">
-                                                <input type="submit" @click="startProgressBar" class="btn btn-warning flex-grow-1 m-2" value="Drop">
-                                                <input type="submit" @click="startNewGame" class="btn btn-danger flex-grow-1 m-2" value="New game">
+                                                <input type="submit" @click="bettingPass" class="btn btn-secondary flex-grow-1 m-1" value="Pass">
+                                                <input type="submit" @click="bettingDrop" class="btn btn-warning flex-grow-1 m-1" value="Drop">
+                                                <input type="submit" @click="startNewGame" class="btn btn-danger flex-grow-1 m-1" value="New game">
                                             </div>
                                         </div>
                                     </div>
@@ -789,10 +872,10 @@ export default {
                         <hr style="color: green">
 
                         <div v-if="this.game.speaker_id == this.thisUserID" class="d-flex justify-content-between align-items-center rounded-3 my-1" style="background: blue">
-                            <h5 class="ms-2 mt-1 align-self-center text-white" style="color: aliceblue;"><b>{{ playerNames[this.thisUserID] }} - {{ this.playerGameStatus }}</b></h5>                            
+                            <h5 class="ms-2 mt-1 align-self-center text-white" style="color: aliceblue;"><b>{{ playerNames[this.thisUserID] }} - {{ currentPlayerStatus }}</b></h5>                            
                         </div>
                         <div v-else class="d-flex justify-content-between align-items-center rounded-3 my-1" style="background: indigo">
-                            <h5 class="ms-2 mt-1 align-self-center text-white" style="color: aliceblue;"><b>{{ playerNames[this.thisUserID] }} - {{ this.playerGameStatus }}</b></h5>                            
+                            <h5 class="ms-2 mt-1 align-self-center text-white" style="color: aliceblue;"><b>{{ playerNames[this.thisUserID] }} - {{ currentPlayerStatus }}</b></h5>                            
                         </div>
                         
                         <hr style="color: green">

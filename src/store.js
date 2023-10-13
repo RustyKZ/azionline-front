@@ -16,9 +16,11 @@ export default createStore({
     },
     setIsLogin(state, value) {
       state.isLogin = value;
+      console.log('SET LOGIN ', value)
     },
     setIsWeb3Login(state, value) {
       state.isWeb3Login = value;
+      console.log('SET WEB3 LOGIN ', value)
     },
     setActiveTable(state, value) {
       state.userActiveTable = value;

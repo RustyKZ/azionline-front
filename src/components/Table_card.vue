@@ -45,11 +45,19 @@ export default {
             this.joinData.table_password = '';
             axios.post(`${this.baseUrl}/API/join_table`, this.joinData)
                 .then(response => {
-                    this.$router.replace(`/table/${tableId}`);
+                    if (response.status === 200) {
+                        // Успешный ответ сервера, перенаправьте пользователя на другую страницу
+                        this.$router.replace(`/table/${tableId}`);
+                    } else {
+                        // Сервер вернул ошибку, выведите сообщение из ответа
+                        alert(`Server Error: ${response.data.message}`);
+                    }
                     console.log(response)
                 })
-                .catch(error => {
+                .catch(error => {                    
+                    const errorMessage = error.response.data.message;
                     console.error(`Join table ${tableId} error `, error);
+                    alert(errorMessage);
                 });
         },
 
