@@ -3,13 +3,15 @@ import axios from 'axios';
 import { mapGetters, mapMutations } from 'vuex';
 import { checkLogin } from './auth.js';
 import { checkWeb3 } from './wallet_connect.js';
+// import { VueDraggableNext } from 'vue-draggable-next';
+
 
 
 
 export default {
     name: 'PlayingTablePage',
     components: {
-
+      //  VueDraggableNext,
     },
     data() {
         return {
@@ -68,8 +70,10 @@ export default {
                 speaker_id: 0,
                 stage: 0,
                 lastdeal: 0,
-                players_bet: [0, 0, 0, 0, 0, 0]
-
+                players_bet: [0, 0, 0, 0, 0, 0],
+                hodor: 0,
+                usersays: ['','','','','',''],
+                top_bet: false
             },
             leaveData:{
                 user_id: 0,
@@ -113,50 +117,20 @@ export default {
                 '/images/220-cads-deck34.png', 
                 '/images/220-cads-deck35.png', 
                 '/images/220-cads-deck36.png',
-                '/images/220-empty.png'],
-            cards: [
-                { name: 'Card 01', image: '/images/220-cads-deck01.png' },
-                { name: 'Card 02', image: '/images/220-cads-deck02.png' },
-                { name: 'Card 03', image: '/images/220-cads-deck03.png' },
-                { name: 'Card 04', image: '/images/220-cads-deck04.png' },
-                { name: 'Card 05', image: '/images/220-cads-deck05.png' },
-                { name: 'Card 06', image: '/images/220-cads-deck06.png' },
-                { name: 'Card 07', image: '/images/220-cads-deck07.png' },
-                { name: 'Card 08', image: '/images/220-cads-deck08.png' },
-                { name: 'Card 09', image: '/images/220-cads-deck09.png' },
-                { name: 'Card 10', image: '/images/220-cads-deck10.png' },
-                { name: 'Card 11', image: '/images/220-cads-deck11.png' },
-                { name: 'Card 12', image: '/images/220-cads-deck12.png' },
-                { name: 'Card 13', image: '/images/220-cads-deck13.png' },
-                { name: 'Card 14', image: '/images/220-cads-deck14.png' },
-                { name: 'Card 15', image: '/images/220-cads-deck15.png' },
-                { name: 'Card 16', image: '/images/220-cads-deck16.png' },
-                { name: 'Card 17', image: '/images/220-cads-deck17.png' },
-                { name: 'Card 18', image: '/images/220-cads-deck18.png' },
-                { name: 'Card 19', image: '/images/220-cads-deck19.png' },
-                { name: 'Card 20', image: '/images/220-cads-deck20.png' },
-                { name: 'Card 21', image: '/images/220-cads-deck21.png' },
-                { name: 'Card 22', image: '/images/220-cads-deck22.png' },
-                { name: 'Card 23', image: '/images/220-cads-deck23.png' },
-                { name: 'Card 24', image: '/images/220-cads-deck24.png' },
-                { name: 'Card 25', image: '/images/220-cads-deck25.png' },
-                { name: 'Card 26', image: '/images/220-cads-deck26.png' },
-                { name: 'Card 27', image: '/images/220-cads-deck27.png' },
-                { name: 'Card 28', image: '/images/220-cads-deck28.png' },
-                { name: 'Card 29', image: '/images/220-cads-deck29.png' },
-                { name: 'Card 30', image: '/images/220-cads-deck30.png' },
-                { name: 'Card 31', image: '/images/220-cads-deck31.png' },
-                { name: 'Card 32', image: '/images/220-cads-deck32.png' },
-                { name: 'Card 33', image: '/images/220-cads-deck33.png' },
-                { name: 'Card 34', image: '/images/220-cads-deck34.png' },
-                { name: 'Card 35', image: '/images/220-cads-deck35.png' },
-                { name: 'Card 36', image: '/images/220-cads-deck36.png' }
+                '/images/220-empty.png'
             ],
+
             cards1: [
-                { name: 'Card 01', image: '/images/220-cads-deck01.png' },
-                { name: 'Card 02', image: '/images/220-cads-deck02.png' },
-                { name: 'Card 03', image: '/images/220-cads-deck03.png' },
-                { name: 'Card 04', image: '/images/220-cads-deck04.png' }
+                { id: 1, name: 'Card 01', image: '/images/220-cads-deck01.png' },
+                { id: 2, name: 'Card 02', image: '/images/220-cads-deck02.png' },
+                { id: 3, name: 'Card 03', image: '/images/220-cads-deck03.png' },
+                { id: 4, name: 'Card 04', image: '/images/220-cads-deck04.png' }
+            ],
+            myCards: [
+                {pos: 1, card: 0, name: 'myCard1', image: '', type: 'card'},
+                {pos: 2, card: 0, name: 'myCard2', image: '', type: 'card'},
+                {pos: 3, card: 0, name: 'myCard3', image: '', type: 'card'},
+                {pos: 4, card: 0, name: 'myCard4', image: '', type: 'card'},
             ],
             roomId: '',
             isAuth: false,
@@ -176,7 +150,8 @@ export default {
             progressElapsed: 0,
             timer: null,
             statusColor: ['Silver', 'Maroon', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo'],
-            playerStatuses: [0, 0, 0, 0, 0, 0]
+            playerStatuses: [0, 0, 0, 0, 0, 0],
+            gameStages: ['Ante betting', 'Blind betting', 'Dealing', 'First turn betting', 'Poor card folding', 'First turn', 'Second turn', 'Third turn', 'Winner checking'],
         };
     },
 
@@ -257,19 +232,31 @@ export default {
                 speaker_id: data[1].game.speaker_id,
                 stage: data[1].game.stage,
                 lastdeal: data[1].game.lastdeal,
-                players_bet: data[1].game.players_bet
+                players_bet: data[1].game.players_bet,
+                hodor: data[1].game.hodor,
+                usersays: data[1].game.usersays,
+                top_bet: data[1].game.top_bet
             }
             this.playerBalance = data[1].balance;
             this.playerGameStatus = data[1].game_status;
 
-            // Определение позиции пользователя за чтолом
+            // Определение позиции пользователя за столом
             this.playerPos = 0;
             for (let i = 0; i < this.table.max_players; i++) {
                 if (this.table.players[i] == this.thisUserID) {
                     this.playerPos = i + 1;
                     break;
-                }
+                }            
             }
+
+            // Определение карт игрока
+            for (let i = 1; i <= 4; i++) {
+                const card = this.myCards.find(item => item.pos === i);
+                // Обновить свойства card внутри массива myCards
+                this.myCards[this.myCards.indexOf(card)].card = this.game.card_players[(this.playerPos-1)*4 + i];
+                this.myCards[this.myCards.indexOf(card)].image = this.cardImagePath[card.card];               
+            }
+
             // Определение соперников
             this.rivalsQuantity = 0;
             this.rivStr = [];
@@ -439,12 +426,75 @@ export default {
             // Ваша логика для defaultAction
         },
         bettingRaise(bet) {
-            console.log('BETTING RAISE ', bet);
+            const call_bet = Math.max(...this.game.players_bet) - this.game.players_bet[this.playerPos - 1];
+            const raise_bet = bet * this.table.min_bet
+            const full_bet = call_bet + raise_bet;
+            if (full_bet > this.playerBalance) {
+                alert('You don’t have enough to bet on')
+                console.log('BETTING BET: TOO POOR FOR BETTING');    
+            } else {
+                const playerRaise = {
+                    user_id: this.thisUserID,
+                    game_id: this.game.id,
+                    bet: raise_bet,
+                }
+                axios.post(`${this.baseUrl}/API/raising`, playerRaise)
+                    .then(response => {
+                        console.log('BETTING CALL: PLAYER CALLS ', response);
+                        this.getTable();
+                        this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при получении данных:', error);
+                    });
+            }
         },
+
         bettingBet(bet) {
-            console.log('BETTING BET ', bet);
+            if (bet * this.table.min_bet > this.playerBalance) {
+                alert('You don’t have enough to bet on')
+                console.log('BETTING BET: TOO POOR FOR BETTING');    
+            } else {
+                const playerBet = {
+                    user_id: this.thisUserID,
+                    game_id: this.game.id,
+                    bet: bet * this.table.min_bet,
+                }
+                axios.post(`${this.baseUrl}/API/betting`, playerBet)
+                    .then(response => {
+                        console.log('BETTING BET: PLAYER BETS ', response);
+                        this.getTable();
+                        this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при получении данных:', error);
+                    });
+            }
         },
+
         bettingCall() {
+            const bet = Math.max(...this.game.players_bet) - this.game.players_bet[this.playerPos - 1];
+            if (bet > this.playerBalance) {
+                alert('You don’t have enough to bet on')
+                console.log('BETTING BET: TOO POOR FOR BETTING');    
+            } else {
+                const playerCall = {
+                    user_id: this.thisUserID,
+                    game_id: this.game.id,
+                    bet: bet,
+                }
+                axios.post(`${this.baseUrl}/API/calling`, playerCall)
+                    .then(response => {
+                        console.log('BETTING CALL: PLAYER CALLS ', response);
+                        this.getTable();
+                        this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при получении данных:', error);
+                    });
+            }
+
+
             console.log('BETTING CALL ');
         },
         bettingDrop() {
@@ -470,6 +520,31 @@ export default {
         },
         testWindow() {
             //this.$refs.CustomAlert.openAlert('Заголовок', 'Сообщение пользователю');
+        },
+
+        dragOver(event) {
+            event.preventDefault();
+        },
+        dragEnter(event) {
+            event.preventDefault();
+        },
+        startDrag(event, item) {
+        // Начало перетаскивания
+            event.dataTransfer.setData('text/plain', JSON.stringify(item));
+            console.log('CARD DRAGGED:', item);
+        },
+
+        drop(event) {
+            event.preventDefault();
+            try {
+                const item = JSON.parse(event.dataTransfer.getData('text/plain'));
+                if (item.type === 'card') {
+                console.log('CARD VALID DROPPED:', item.pos);
+            } 
+            } catch (error) {   
+                console.log('CARD INVALID DROPPED:');
+            }
+            
         },
 
     },
@@ -529,21 +604,22 @@ export default {
                                 <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">
                                     <div class="row">
                                         <div class="col-8">
-                                            <img class="my-1" :src="cardRivalImagePath[4]" style="height: 12vh; margin-left: 0px; position: absolute;">
+                                            <img class="my-1" :src="cardRivalImagePath[4]" style="height: 12vh; margin-left: 0px; position: absolute;" :draggable="false">
                                         </div>
                                         <div class="col-4 align-items-end">
-                                            <img class="my-1" :src="cardImagePath[25]" style="height: 12vh; margin-left: 0px; position: absolute;">
+                                            <img class="my-1" :src="cardImagePath[25]" style="height: 12vh; margin-left: 0px; position: absolute;" :draggable="false">
                                         </div>                                        
                                     </div>
                                 </div>  
                             </div>
+
                             <!-- Верхний ряд 3/4 из 3 - Реплики соперников -->
                             <div class="row align-items-center, main" style="height: 21%;">
                                 <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">
                                     <div class="row" style="height:100%">
                                         <div class="col-9">
-                                            <div class="d-flex align-items-center rounded-3 mb-1 w-100" style="height:90%; background:white">
-                                                <h6 style="color: black">User says:</h6>
+                                            <div class="d-flex align-items-center rounded-3 mb-1 w-100" style="height:90%; background:white; white-space: pre-line;">
+                                                <h6 class="ms-3 mt-1" style="color: black">{{ game.usersays[game.players.indexOf(rival)] }}</h6>
                                             </div>
                                         </div>
                                         <div class="col-3 align-middle">                  
@@ -569,7 +645,13 @@ export default {
                     <!--    Центарльный ряд 3 из 4 -->
                     <div class="row align-items-center, main" style="height: 57%">
                     <!-- Игровой стол  -->
-                        <div class="container rounded-5 my-1" style="place-items: center; background: darkgreen; heigth: 100%; border: solid 2px Maroon; margin-left: 12px">
+                    <!--
+                        <div class="container rounded-5 my-1" style="place-items: center; background: darkgreen; heigth: 100%; border: solid 2px Maroon; margin-left: 12px"
+                            @dragenter.prevent="playerPos === game.speaker ? dragEnter : null"
+                            @dragover.prevent="playerPos === game.speaker ? dragOver : null"
+                            @drop="playerPos === game.speaker ? drop : null">
+                        -->
+                        <div class="container rounded-5 my-1" style="place-items: center; background: darkgreen; heigth: 100%; border: solid 2px Maroon; margin-left: 12px" @dragenter.prevent="dragEnter" @dragover.prevent="dragOver" @drop="drop">
                             <div class="row" style="height: 100%">
                                 <!--    1 колонка центрального ряда - кон -->
                                 <div class="col-1 align-items-center justify-content-center">
@@ -687,11 +769,9 @@ export default {
                                             <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 90px; position: absolute; bottom: 0; left: 0">
                                         </div>
                                         <div class="col-6 d-flex align-items-center justify-content-center">
-
+                                        
                                         <!--  Тестовый прогрессбар -->
-
-
-
+                                        {{ game.usersays }}
                                         </div>
                                     </div>
                                 </div>
@@ -724,7 +804,7 @@ export default {
                                         <div style="color: black"><h5>UserID: <b> {{ this.thisUserID }} </b></h5></div>
                                     </div>
                                     <div class="col-7 align-self-center">
-                                        <div v-if="game.speaker_id != this.thisUserID" class="d-flex justify-content-center align-items-center rounded-3" style="background: indigo">
+                                        <div v-if="game.speaker_id != this.thisUserID" class="d-flex justify-content-center align-items-center rounded-3" :style="{ background: statusColor[this.playerGameStatus] }">
                                             <h5 style="color: white">{{ truncatedNicknameText( this.playerNames[this.thisUserID]) }}</h5>
                                         </div>
                                         <div v-else class="d-flex justify-content-center align-items-center rounded-3" style="background: blue">
@@ -745,10 +825,11 @@ export default {
                                         </div>  
                                     </div>
                                 </div>
+                                <!--   Слово пользователя-->        
                                 <div class="row align-items-end" style="; height: 33%">
                                     <div class="align-self-center">
                                         <div class="d-flex justify-content-center align-items-center rounded-3" style="background:Honeydew">
-                                            <h5 style="color: black">User says:</h5> {{ this.cardHeight }}
+                                            <h5 style="color: black">{{ game.usersays[playerPos - 1] }}</h5>
                                         </div>  
                                     </div>
                                 </div>
@@ -756,17 +837,18 @@ export default {
                             
                         </div>
                         <!--    2 колонка нижнего ряда - карты пользователя-->
-                        <div class="col" style="display: grid; place-items: center">
-                            <div ref="userCardDiv" class="row" style="height:100%; overflow: hidden;">
-                                <div v-for="myCard in [1, 2, 3, 4]" :key="myCard" class="col" style="padding: 0; margin:0; height:100%">
-                                    <div v-if="((this.game.card_players[(playerPos-1)*4 + myCard]) !=0) && (this.playerGameStatus > 1)" style="padding: 0; margin:0; height: 100%;">
-                                        <img :src="cardImagePath[this.game.card_players[(playerPos-1)*4 + myCard ]]" :style="{ height: `${this.cardHeight}px` }">
+                        <div class="col" style="display: grid; place-items: center">                    
+
+                            <div ref="userCardDiv" class="row" style="height:100%; overflow: hidden;">        
+                                <div v-for="item in myCards" :key="item.pos" class="col" style="padding: 0; margin:0; height:100%">
+                                    <div v-if="(item.card !=0) && (this.playerGameStatus > 1)" style="padding: 0; margin:0; height: 100%;">
+                                        <img :src="item.image" :alt="item.name" class="draggable-item" :draggable="true" @dragstart="startDrag($event, item)">
                                     </div>
                                 </div>
                             </div>
+                            
                         </div>
 
-                        <!--    3 колонка нижнего ряда - кнопки пользователя-->
                         <div class="col" style="display: grid; place-items: center; height: 100%">
                             <div class="main" style="display: flex; justify-content: center; align-items: center; height: 100%; width: 100%">
                                 <div class="container" style="height: 100%; width: 100%;">
@@ -781,28 +863,29 @@ export default {
                                     <!--                      Кнопки для ставок -->
                                     <div class="row align-items-center, main" style="height: 34%; display: grid; place-items: center;" >
                                         <div style="height: 50%; display: flex; justify-content: center; align-items: center;">
-                                            <div class="d-flex flex-wrap align-items-center justify-content-center w-100">
-                                                <!-- <input type="submit" class="btn btn-primary flex-grow-1 m-2" value="Bet">-->
-                                                <!-- <input type="submit" class="btn btn-primary flex-grow-1 m-2" value="Raise">-->
-                                                <div class="btn-group dropup flex-grow-1">
+                                            <div v-if="this.game.speaker_id == this.thisUserID" class="d-flex flex-wrap align-items-center justify-content-center w-100">
+
+                                                <div v-if="game.stage == 1" class="btn-group dropup flex-grow-1">
                                                     <button type="button" class="btn btn-primary dropdown-toggle flex-grow-1 m-1" data-bs-toggle="dropdown" aria-expanded="false">Blind</button>
-                                                    <ul id="bet_button" class="dropdown-menu">
+                                                    <ul class="dropdown-menu">
                                                         <li v-for="myBlindBet in [5, 4, 3, 2, 1]" :key="myBlindBet" @click="bettingBlind(myBlindBet)"><a class="dropdown-item" href="#">{{ this.textNumber(this.table.min_bet * myBlindBet) }} (call {{ this.textNumber(this.table.min_bet * myBlindBet * 2) }})</a></li>
                                                     </ul>
                                                 </div>
-                                                <div class="btn-group dropup flex-grow-1">
+                                                <div v-if="(game.stage == 3) && (game.players_bet.every(item => item === 0)) && (!game.top_bet)" class="btn-group dropup flex-grow-1">
                                                     <button type="button" class="btn btn-primary dropdown-toggle flex-grow-1 m-1" data-bs-toggle="dropdown" aria-expanded="false">Bet</button>
-                                                    <ul id="bet_button" class="dropdown-menu">
+                                                    <ul class="dropdown-menu">
                                                         <li v-for="myBet in [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]" :key="myBet" @click="bettingBet(myBet)"><a class="dropdown-item" href="#">{{ this.textNumber(this.table.min_bet * myBet) }}</a></li>
                                                     </ul>
                                                 </div>
-                                                <div class="btn-group dropup flex-grow-1">
+                                                <div v-if="(game.stage == 3) && (!game.players_bet.every(item => item === 0)) && (!game.top_bet)" class="btn-group dropup flex-grow-1">
                                                     <button type="button" class="btn btn-primary dropdown-toggle flex-grow-1 m-1" data-bs-toggle="dropdown" aria-expanded="false">Raise</button>
-                                                    <ul id="raise_button" class="dropdown-menu">
+                                                    <ul class="dropdown-menu">
                                                         <li v-for="myRaise in [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]" :key="myRaise" @click="bettingRaise(myRaise)"><a class="dropdown-item" href="#">{{ this.textNumber(this.table.min_bet * myRaise) }}</a></li>
                                                     </ul>
                                                 </div>
-                                                <input type="submit" @click="bettingCall" class="btn btn-dark flex-grow-1 m-1" value="Call">
+                                                <div v-if="(game.stage == 3) && (Math.max(...game.players_bet) > game.players_bet[playerPos - 1])" class="btn-group dropup flex-grow-1">
+                                                    <button type="button" @click="bettingCall" class="btn btn-dark flex-grow-1 m-1">Call: {{ textNumber(Math.max(...game.players_bet) - game.players_bet[playerPos - 1]) }}</button>                                
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -810,11 +893,12 @@ export default {
                                     <!--  Кнопки для паса, поддержки и сбрасывания  -->
                                     <div class="row align-items-center, main" style="height: 34%; display: grid; place-items: center;" >
                                         <div style="height: 50%; display: flex; justify-content: center; align-items: center;">
-                                            <div class="d-flex flex-wrap align-items-center justify-content-center w-100">
+                                            <div v-if="(this.game.speaker_id == this.thisUserID) && (game.stage == 3)" class="d-flex flex-wrap align-items-center justify-content-center w-100">
                                                 <input type="submit" @click="bettingPass" class="btn btn-secondary flex-grow-1 m-1" value="Pass">
                                                 <input type="submit" @click="bettingDrop" class="btn btn-warning flex-grow-1 m-1" value="Drop">
-                                                <input type="submit" @click="startNewGame" class="btn btn-danger flex-grow-1 m-1" value="New game">
+                                                
                                             </div>
+                                            <input type="submit" @click="startNewGame" class="btn btn-danger flex-grow-1 m-1" value="New game">
                                         </div>
                                     </div>
 
@@ -861,9 +945,10 @@ export default {
                             </div>
                             
                             <!-- Сброшенная масть -->
+
                             <div v-if="table.drop_suit != 0" class="col-4 d-flex justify-content-center align-items-center">
                                 <div style="width: 80%">
-                                    <img :src="dropsuit[table.drop_suit-1]" style="width: 100%;">
+                                    <img :src="dropsuit[table.drop_suit-1]" style="width: 100%;" :draggable="false">
                                 </div>
                             </div>
 
@@ -871,15 +956,18 @@ export default {
 
                         <hr style="color: green">
 
+                        <!-- Никнейм игрока  -->
+
                         <div v-if="this.game.speaker_id == this.thisUserID" class="d-flex justify-content-between align-items-center rounded-3 my-1" style="background: blue">
                             <h5 class="ms-2 mt-1 align-self-center text-white" style="color: aliceblue;"><b>{{ playerNames[this.thisUserID] }} - {{ currentPlayerStatus }}</b></h5>                            
                         </div>
-                        <div v-else class="d-flex justify-content-between align-items-center rounded-3 my-1" style="background: indigo">
+                        <div v-else class="d-flex justify-content-between align-items-center rounded-3 my-1" :style="{ background: statusColor[this.playerGameStatus] }">
                             <h5 class="ms-2 mt-1 align-self-center text-white" style="color: aliceblue;"><b>{{ playerNames[this.thisUserID] }} - {{ currentPlayerStatus }}</b></h5>                            
                         </div>
                         
                         <hr style="color: green">
                         
+                        <!-- Никнеймы соперников  -->
                         <div class="container">
                             <div class="row">
                                 <div v-for="playerN in [0, 1, 2, 3, 4, 5]" :key="playerN" style="padding: 0; margin: 0;">
@@ -894,6 +982,16 @@ export default {
                                 </div>
                             </div>   
                         </div>
+                        
+                        <hr style="color: green">
+
+                        <!-- Статус игры  -->
+                        <div class="d-flex justify-content-center align-items-center rounded-3 my-1">
+                            <div class="text-center">
+                                <h4><b> {{ gameStages[game.stage] }}</b></h4>
+                            </div>
+                        </div>
+
                         <hr style="color: green">
 
                     </div>
@@ -916,6 +1014,13 @@ export default {
     width: 100%;
     margin: 0;
     padding: 0;
+}
+.draggable-item {
+    height: 18vh;
+    cursor: grab; /* Установите курсор grab для элементов, чтобы указать их перетаскиваемость */
+    pointer-events:visibleStroke; /* Уберите прозрачность и разрешите взаимодействие с элементом */
+    user-select: none; /* Запретите выделение текста внутри элемента */
+    opacity: 1;
 }
 
 </style>
