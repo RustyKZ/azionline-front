@@ -27,33 +27,35 @@
                     table_id: 0,
                     table_password: '',
                 },
+                tableRequest: {
+                    user_id: 0
+                },
                 thisUserID: 0,
                 roomId: 'tables',
                 tableKyes: {},
-                UserActiveTable: 0,
                 isAuth: false,
                 isWeb3Auth: false,
+                playerActiveTable: 0
             };
         },
         created() {
-            this.thisUserID = localStorage.getItem('user_id');
-            this.checkWeb3connection();
-            
-            
+            this.thisUserID = Number(localStorage.getItem('user_id'));
+            this.tableRequest.user_id = this.thisUserID;
+            this.checkWeb3connection();                        
         },
-        mounted() {
+        async mounted() {
             this.isAuth = checkLogin();
             this.isWeb3Auth = checkWeb3();
+            await this.getTables();
             console.log('LOGIN ', this.isAuth,'WEB3', this.isWeb3Auth);
             if (this.isAuth == false && this.isWeb3Auth == false) {
                 this.$router.push('/access_denied');
-            }
-            this.getTables();
-            this.joinRoom(this.roomId);
+            }                        
             this.$socket.on('update_tables', this.handleUpdateTables) 
+            console.log('ACTIVE TABLE IS ', this.playerActiveTable)
         },
         methods: {
-            ...mapMutations(['setIsLogin', 'setIsWeb3Login', 'setActiveTable']),
+            ...mapMutations(['setIsLogin', 'setIsWeb3Login']),
             async checkAuthorization() {
                 try {
                     this.isAuth = await checkAuth(this.baseUrl); // Проверяйте авторизацию
@@ -61,7 +63,7 @@
                     if (this.isAuth) {
                         // Пользователь авторизован, выполните нужные действия
                         this.userId = localStorage.getItem('user_id');
-                        this.userActiveTable = localStorage.getItem('user_active_table');
+                        // this.userActiveTable = localStorage.getItem('user_active_table');
                     } else {
                         // Пользователь не авторизован, выполните нужные действия
                         this.isAuth = false;
@@ -72,7 +74,6 @@
                 // Обработка ошибок при проверке авторизации
                 }
             },
-
             async checkWeb3connection(){
                 try {
                     this.isWeb3Auth = await checkMetaMaskConnection(); // Проверяйте авторизацию
@@ -80,7 +81,7 @@
                         // Пользователь авторизован, выполните нужные действия
                         this.userAddress = localStorage.getItem('user_wallet');
                         this.userId = localStorage.getItem('user_id');
-                        this.userActiveTable = localStorage.getItem('user_active_table');
+                        // this.userActiveTable = localStorage.getItem('user_active_table');
                         // this.setIsWeb3Login(true);
                     } else {
                         // Пользователь не авторизован, выполните нужные действия
@@ -94,7 +95,7 @@
             },
             getTables() {
                 // Здесь мы делаем GET-запрос к нашему Flask API, чтобы получить данные
-                axios.post(`${this.baseUrl}/API/tables`)
+                axios.post(`${this.baseUrl}/API/tables`, this.tableRequest)
                 .then(response => {
                     this.tables = response.data.tables_data;
                     this.playerNames = response.data.player_names;
@@ -102,12 +103,15 @@
                     this.playerRating = response.data.player_rating;
                     this.playerMatrix = response.data.player_matrix;
                     this.tableKeys = this.updateTablesDict(this.tables);
+                    this.playerActiveTable = response.data.player_active_table;
+                    console.log('AXIOS GET TABLES - AT is ', this.playerActiveTable);
+                    this.joinRoom(this.roomId);
                 })
                 .catch(error => {
                     console.error('Ошибка при получении данных:', error);
                 });
             },
-            joinTable(tableId) {
+            /*joinTable(tableId) {
                 console.log('Join to table ', tableId);
                 this.joinData.user_id = this.thisUserID;
                 this.joinData.table_id = tableId;
@@ -115,13 +119,12 @@
                 axios.post(`${this.baseUrl}/API/join_table`,this.joinData)
                 .then(response => {
                     this.$router.replace(`/table/${tableId}`);
-
                     console.log(response)
                 })
                 .catch(error => {
                     console.error(`Join table ${tableId} error `, error);
                 });
-            },
+            },*/
             stringToArray(str) {
                 // Разбиваем строку на массив, используя запятую как разделитель
                 return str.split(',').map(item => parseInt(item.trim()));
@@ -148,7 +151,7 @@
 
         },
         computed: {
-            ...mapGetters(['isLogin', 'isWeb3Login', 'userActiveTable']),
+            ...mapGetters(['isLogin', 'isWeb3Login']),
         // Функция для вычисления ключа для компонента
         tableKey() {
             return (tableId) => {
@@ -175,7 +178,8 @@
                                     :table="table"
                                     :playerNames="playerNames"
                                     :playerReputation="playerReputation"
-                                    :playerRating="playerRating"/>
+                                    :playerRating="playerRating"
+                                    :playerActiveTable = "playerActiveTable"/>
                             </div>
                         </div>
                     </div>

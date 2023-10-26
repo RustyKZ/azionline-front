@@ -1,6 +1,6 @@
 <script>
 import axios from 'axios';
-import { mapGetters, mapMutations } from 'vuex';
+
 
 
 export default {
@@ -20,7 +20,9 @@ export default {
             leaveData: {
                 user_id: 0,
                 table_id: 0,
-            }
+            },
+            deckStatus: ['36 cards', '27 cards', '27 cards', '27 cards', '27 cards'],
+            coinStatus: ['FreeCoin', 'GoldCoin']
             
         };
     },
@@ -29,17 +31,15 @@ export default {
         playerNames: Object, // Словарь имен игроков
         playerReputation: Object, // Словарь репутации игроков
         playerRating: Object, // Словарь рейтинга игроков
+        playerActiveTable: Number,
     },
     created() {
-        this.thisUserID = localStorage.getItem('user_id');
-        this.setActiveTable(localStorage.getItem('user_active_table'))
-        this.activeTable = this.$store.getters.getUserActiveTable;
-        console.log('TABLE CARD: User table', this.activeTable)
+        this.thisUserID = Number(localStorage.getItem('user_id'));        
+        console.log('TABLE CARD: User table', this.playerActiveTable, this.tableId);
     },
     methods: {
-        ...mapMutations(['setActiveTable']),
         joinTable(tableId) {
-            console.log('Join to table ', tableId);
+            console.log('Join to the table ', this.playerActiveTable);
             this.joinData.user_id = this.thisUserID;
             this.joinData.table_id = tableId;
             this.joinData.table_password = '';
@@ -47,6 +47,7 @@ export default {
                 .then(response => {
                     if (response.status === 200) {
                         // Успешный ответ сервера, перенаправьте пользователя на другую страницу
+                        this.joinRoom(`table-${this.playerActiveTable}`)
                         this.$router.replace(`/table/${tableId}`);
                     } else {
                         // Сервер вернул ошибку, выведите сообщение из ответа
@@ -61,16 +62,13 @@ export default {
                 });
         },
 
-        leaveTable(TableId) {
-            this.thisUserID = localStorage.getItem('user_id');
+        leaveTable(tableId) {            
             this.leaveData.user_id = this.thisUserID;
-            this.leaveData.table_id = TableId;
+            this.leaveData.table_id = tableId;
             axios.post(`${this.baseUrl}/API/leave_table`,this.leaveData)
             .then(response => {      
                 this.updateTablesHall();
-                this.leaveRoom(this.roomId);
-                this.setActiveTable(0);
-                localStorage.removeItem('user_active_table');
+                this.leaveRoom(this.roomId);                
                 console.log('METHOD leaveTable: ', response)
                 this.$store.commit('incrementStatusHeader');
                 this.activeTable = 0;
@@ -99,11 +97,28 @@ export default {
             console.log('UpdateTableHall activated');
             this.$socket.emit('update_tables_hall');
             
-        }
+        },
+        truncatedNickname24(nicknameText) {
+            try {
+                // const buttonText = this.userList[this.userId] || '';
+                const buttonText = nicknameText || '';
+                if (buttonText.length > 24) {
+                    return buttonText.slice(0, 18) + '...' + buttonText.slice(-3);
+                } else {                        
+                    return buttonText;
+                }
+            }
+            catch {
+                console.error('truncatedNicknameText Error')
+                return ''; // Вернуть пустую строку или другое значение по умолчанию
+            }
+        },
 
     },
     computed: {
-        ...mapGetters(['userActiveTable']),
+        getBlindStatus() {
+            return this.table.blind_game ? 'Enabled' : 'Disabled';
+    }
     }
 };
 </script>
@@ -120,9 +135,9 @@ export default {
                         <div>
                             <h6>Max Players: <b>{{ table.max_players }}</b></h6>
                             <h6>Ante: <b>{{ table.min_bet }}</b></h6>
-                            <h6>Blind Game: <b>{{ table.blind_game }}</b></h6>
-                            <h6>Coin Type: <b>{{ table.cointype }}</b></h6>
-                            <h6>Card Deck: <b>{{ table.drop_suit }}</b></h6>
+                            <h6>Blind Game: <b>  {{ getBlindStatus }} </b></h6>
+                            <h6>Coin Type: <b>{{ coinStatus[table.cointype] }}</b></h6>
+                            <h6>Card Deck: <b>{{ deckStatus[table.drop_suit] }}</b></h6>
                         </div>
                     </div>
                 </div>
@@ -131,27 +146,26 @@ export default {
                     <div class="container" style="height: 100%">
 
                         <div class="row">
-                            <div class="col-6 d-flex justify-content-center align-items-center">
+                            <div class="col-7 d-flex justify-content-center align-items-center">
                                 <h6>Player</h6>
                             </div>
                             <div class="col-3 d-flex justify-content-center align-items-center">
                                 <h6>Reputation</h6>
                             </div>
-                            <div class="col-3 d-flex justify-content-center align-items-center">
+                            <div class="col-2 d-flex justify-content-center align-items-center">
                                 <h6>Rating</h6>
                             </div>
                         </div>
 
                         <div v-for="playerNumber in table.max_players" :key="playerNumber" class="row">
-                            <div class="col-6 d-flex">
+                            <div class="col-7 d-flex">
                                 <!-- <a href="/profile/{{ player_id }}" class="text-decoration-none"><b>{{ player_names[player_id] }}</b></a> -->
-                                <b style="color: darkblue"> {{ playerNames[stringToArray(table.players)[playerNumber - 1]]
-                                }} </b>
+                                <b style="color: darkblue"> {{ truncatedNickname24(playerNames[stringToArray(table.players)[playerNumber - 1]]) }} </b>
                             </div>
                             <div class="col-3 d-flex justify-content-center align-items-center">
                                 {{ playerReputation[stringToArray(table.players)[playerNumber - 1]] }}
                             </div>
-                            <div class="col-3 d-flex justify-content-center align-items-center">
+                            <div class="col-2 d-flex justify-content-center align-items-center">
                                 {{ playerRating[stringToArray(table.players)[playerNumber - 1]] }}
                             </div>
                         </div>
@@ -165,13 +179,15 @@ export default {
         <div class="col-3 d-flex justify-content-center">
             <div class="container d-flex justify-content-center align-items-end" style="width: 100%;">
                 <div class="container" style="width: 100%">
-                    <div v-if="activeTable == table.id" class="d-flex justify-content-center my-1" style="width: 100%;">
+                <!--
+                    <div v-if="playerActiveTable == table.id" class="d-flex justify-content-center my-1" style="width: 100%;">
                         <button @click="leaveTable(table.id)" class="btn btn-danger flex-grow-1 w-100">Leave</button>
                     </div>
-                    <div v-if="activeTable == table.id" class="d-flex justify-content-center my-1" style="width: 100%;">
-                        <button @click="joinTable(table.id)" class="btn btn-outline-success flex-grow-1 w-100">Return</button>
+                -->
+                    <div v-if="playerActiveTable == table.id" class="d-flex justify-content-center my-1" style="width: 100%;">
+                        <button @click="joinTable(playerActiveTable)" class="btn btn-outline-success flex-grow-1 w-100">Return</button>
                     </div>
-                    <div v-if="activeTable != table.id" class="d-flex justify-content-center my-1" style="width: 100%;">
+                    <div v-if="playerActiveTable != table.id" class="d-flex justify-content-center my-1" style="width: 100%;">
                         <button @click="joinTable(table.id)" class="btn btn-success flex-grow-1 w-100">Join</button>
                     </div>
                 </div>

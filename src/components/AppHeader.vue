@@ -36,19 +36,16 @@
             const userListString = localStorage.getItem('user_list')
             this.userList = JSON.parse(userListString) // Парсим строку JSON в объект
             this.headerUserNickname = localStorage.getItem('current_user_nickname')
-            // console.log('Current user: ',this.headerUserNickname,'Users registered: ', this.userList)
-            this.userActiveTable = localStorage.getItem('user_active_table')
-            console.log('User Active Table = ', this.userActiveTable)
+            // console.log('Current user: ',this.headerUserNickname,'Users registered: ', this.userList)            
         },
         methods: {
-            ...mapMutations(['setIsLogin', 'setIsWeb3Login', 'setActiveTable']),
+            ...mapMutations(['setIsLogin', 'setIsWeb3Login']),
             async checkAuthorization() {
                 try {
                     this.isAuth = await checkAuth(this.baseUrl); // Проверяйте авторизацию
                     if (this.isAuth) {
                         // Пользователь авторизован, выполните нужные действия
-                        this.userId = localStorage.getItem('user_id');
-                        this.userActiveTable = localStorage.getItem('user_active_table');
+                        this.userId = localStorage.getItem('user_id');                        
                     } else {
                         // Пользователь не авторизован, выполните нужные действия
                         this.isAuth = false;
@@ -66,8 +63,7 @@
                     if (this.isWeb3Auth) {
                         // Пользователь авторизован, выполните нужные действия
                         this.userAddress = localStorage.getItem('user_wallet');
-                        this.userId = localStorage.getItem('user_id');
-                        this.userActiveTable = localStorage.getItem('user_active_table');
+                        this.userId = localStorage.getItem('user_id');                        
                         // this.setIsWeb3Login(true);
                     } else {
                         // Пользователь не авторизован, выполните нужные действия
@@ -111,7 +107,6 @@
                         localStorage.removeItem('current_user_niackname');
                         localStorage.removeItem('user_active_table');
                         this.setIsLogin(false);
-                        this.setActiveTable(0);
                         this.isAuth = checkAuth(this.baseUrl);
                         console.log(this.isAuth);
                         if (this.$route.path === '/') {
@@ -141,7 +136,6 @@
                         setTimeout(() => {
                         this.$store.commit('incrementStatusHeader');
                         }, pauseDuration);
-                        this.setActiveTable(0);
                     })
                     .catch(error => {
                         console.error('Error in walletConnectAndIncrementStatusHeader:', error);
@@ -186,7 +180,7 @@
             },
         },
         computed: {
-            ...mapGetters(['isLogin', 'isWeb3Login', 'userActiveTable']),
+            ...mapGetters(['isLogin', 'isWeb3Login']),
             truncatedNicknameText() {
                 try {
                     // const buttonText = this.userList[this.userId] || '';

@@ -139,8 +139,8 @@ export async function checkMetaMaskConnection() {
 
             const userList = response.data.users_info;
             localStorage.setItem('user_list', JSON.stringify(userList));
-            const userActiveTable = response.data.user_table;
-            localStorage.setItem('user_active_table', userActiveTable);
+            // const userActiveTable = response.data.user_table;
+            // localStorage.setItem('user_active_table', userActiveTable);
 
             const userListDict = JSON.stringify(userList);
             const userListArray = JSON.parse(userListDict);

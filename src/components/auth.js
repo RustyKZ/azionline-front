@@ -43,8 +43,8 @@ export async function checkAuth(baseUrl) {
     localStorage.setItem('user_list', JSON.stringify(userList));
     const userListDict = JSON.stringify(userList);
     const userListArray = JSON.parse(userListDict);
-    const userActiveTable = response.data.user_table;
-    localStorage.setItem('user_active_table', userActiveTable);
+    // const userActiveTable = response.data.user_table;
+    // localStorage.setItem('user_active_table', userActiveTable);
     if (userId != 0) {
       try {
           const currentUserNickname = userListArray[userId];

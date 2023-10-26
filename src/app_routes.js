@@ -10,6 +10,7 @@ import PlayerProfile from './components/PlayerProfile.vue'
 import AccessDenied from './components/AccessDenied.vue'
 import Play_Tables from './components/Play_Tables.vue'
 import Playing_Table from './components/Playing_Table.vue'
+import Not_Found from './components/Not_Found.vue'
 
 const router = createRouter({
   routes: [
@@ -19,6 +20,7 @@ const router = createRouter({
     { path: '/signup', component: Sign_Up },
     { path: '/login', component: Log_In },
     { path: '/access_denied', component: AccessDenied },
+    { path: '/404', component: Not_Found },
 
     { path: '/tables', component: Play_Tables, name: 'TablesPage' },
     { path: '/profile/:user_id', component: PlayerProfile, name: 'ProfilePage' },

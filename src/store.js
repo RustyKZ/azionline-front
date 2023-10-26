@@ -5,7 +5,7 @@ export default createStore({
     statusHeader: 0,
     isLogin: true,
     isWeb3Login: true,
-    userActiveTable: 0
+    // userActiveTable: 0
   },
   mutations: {
     incrementStatusHeader(state) {
@@ -22,10 +22,10 @@ export default createStore({
       state.isWeb3Login = value;
       console.log('SET WEB3 LOGIN ', value)
     },
-    setActiveTable(state, value) {
-      state.userActiveTable = value;
-      console.log('SET ACTIVE TABLE: Active table is ', value)
-    },
+    // setActiveTable(state, value) {
+    //  state.userActiveTable = value;
+    //  console.log('SET ACTIVE TABLE: Active table is ', value)
+    // },
   },
   actions: {
     // Можете добавить другие действия здесь, если это необходимо
@@ -34,7 +34,7 @@ export default createStore({
     getStatusHeader: (state) => state.statusHeader,
     getIsLogin: (state) => state.isLogin,
     getIsWeb3Login: (state) => state.isWeb3Login,
-    getUserActiveTable: (state) => state.userActiveTable,
+    // getUserActiveTable: (state) => state.userActiveTable,
 
     isAuthenticated(state) {
       return state.isLogin || state.isWeb3Login;

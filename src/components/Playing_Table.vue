@@ -1,11 +1,8 @@
 <script>
 import axios from 'axios';
-import { mapGetters, mapMutations } from 'vuex';
 import { checkLogin } from './auth.js';
 import { checkWeb3 } from './wallet_connect.js';
 // import { VueDraggableNext } from 'vue-draggable-next';
-
-
 
 
 export default {
@@ -22,7 +19,7 @@ export default {
             playerNumber: 0,
             rivalNumber: 0,
             thisUserID: 0,
-            tableID: null,
+            tableId: null,
             tableRequest:{
                     user_id: 0,
                     table_id: 0,
@@ -76,6 +73,11 @@ export default {
                 top_bet: false,
                 check: [false, false, false, false, false, false],
                 status: [0, 0, 0, 0, 0, 0],
+                turn1win: 0,
+                turn2win: 0,
+                turn3win: 0,
+                current_hodor: 0,
+                azi_price: 0
             },
             leaveData:{
                 user_id: 0,
@@ -151,46 +153,52 @@ export default {
             progressWidth: 0,
             progressElapsed: 0,
             timer: null,
-            statusColor: ['Silver', 'Maroon', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', '#ffc107'],
+            statusColor: ['Silver', 'Maroon', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', '#ffc107','indigo','Silver','indigo','#ffc107'],
             playerStatuses: [0, 0, 0, 0, 0, 0],
-            gameStages: ['Ante betting', 'Blind betting', 'Dealing', 'First turn betting', 'Discard extra card', 'First turn', 'Second turn', 'Third turn', 'Winner checking','', 'All check - Re-dealing'],
+            gameStages: ['Ante betting', 'Blind betting', 'Dealing', 'First turn betting', 'Discard extra card', 'First turn', 'Second turn', 'Third turn', 'Winner checking','Waiting for players to AZI joining', 'All check - Re-dealing', 'End of the Game'],
         };
     },
 
     created() {
-        this.tableId = this.$route.params.table_id;
-        this.thisUserID = localStorage.getItem('user_id');
+        this.thisUserID = Number(localStorage.getItem('user_id'));
+        this.tableId = Number(this.$route.params.table_id);
         this.roomId = 'table-'+ this.$route.params.table_id;
-        console.log('tableID = ', this.tableID, 'userID = ', this.thisUserID, ' Room ID = ', this.roomId)
+        console.log('tableID = ', this.tableId, 'userID = ', this.thisUserID, ' Room ID = ', this.roomId)
     },
 
-    mounted() {
+    async mounted() {
         this.isAuth = checkLogin();
         this.isWeb3Auth = checkWeb3();
         if (this.isAuth == false && this.isWeb3Auth == false) {
             this.$router.push('/access_denied');
         }
+        
         this.tableRequest.user_id = this.thisUserID;
-        this.tableRequest.table_id = this.tableId;
+        this.tableRequest.table_id = Number(this.$route.params.table_id);
         this.tableRequest.table_password = '';
-        this.getTable()
-        this.setActiveTable(this.table.id);
-        this.$store.commit('incrementStatusHeader');
-        this.joinRoom(this.roomId);
+        console.log('PLAYING TABLE GET TABLE :',this.tableRequest)
+        await this.getTable()        
+        this.$store.commit('incrementStatusHeader');        
         this.updateTablesHall();
-        this.$socket.on('update_room', this.handleUpdateRoom); 
         this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
         const divElement = this.$refs.userCardDiv;
         this.cardHeight = Math.floor(divElement.getBoundingClientRect().height);
-        console.log(`Высота div: ${this.cardHeight}px`);
+        // console.log(`Высота div: ${this.cardHeight}px`);
         this.startProgressBar()
+        this.$socket.on('update_room', this.handleUpdateRoom);
     },
 
     methods: {
-        ...mapMutations(['setActiveTable']),
         getTable() {
-            axios.post(`${this.baseUrl}/API/get_table`, this.tableRequest)
+            const requestT = {
+                user_id: this.thisUserID,
+                table_id: Number(this.$route.params.table_id),
+                table_password: ''
+            }
+            console.log('PLAYING TABLE GET_TABLE | AXIOS:', requestT)
+            axios.post(`${this.baseUrl}/API/get_table`, requestT)
         .then(response => {
+            if (response.status === 200) {
             const data = response.data;
             this.table = {
                 id: data[1].table.id,
@@ -239,12 +247,14 @@ export default {
                 usersays: data[1].game.usersays,
                 top_bet: data[1].game.top_bet,
                 check: data[1].game.check,
-                status: data[1].game.status
+                status: data[1].game.status,
+                turn1win: data[1].game.turn1win,
+                turn2win: data[1].game.turn2win,
+                turn3win: data[1].game.turn3win,
+                current_hodor: data[1].game.current_hodor,
+                azi_price: data[1].game.azi_price
             }
             this.playerBalance = data[1].balance;
-            // this.playerGameStatus = data[1].game_status;
-
-
             // Определение позиции пользователя за столом
             this.playerPos = 0;
             for (let i = 0; i < this.table.max_players; i++) {
@@ -253,9 +263,7 @@ export default {
                     break;
                 }            
             }
-
             this.playerGameStatus = this.game.status[this.playerPos - 1]
-
             // Определение карт игрока
             for (let i = 1; i <= 4; i++) {
                 const card = this.myCards.find(item => item.pos === i);
@@ -263,7 +271,6 @@ export default {
                 this.myCards[this.myCards.indexOf(card)].card = this.game.card_players[(this.playerPos-1)*4 + i];
                 this.myCards[this.myCards.indexOf(card)].image = this.cardImagePath[card.card];               
             }
-
             // Определение соперников
             this.rivalsQuantity = 0;
             this.rivStr = [];
@@ -284,24 +291,26 @@ export default {
             });
 
             this.playerNames = data[1].player_names;
-            this.playerStatuses = data[1].player_statuses
-            // this.playerStatuses = data[1].game.status
-            localStorage.setItem('user_active_table', this.table.id);
+            this.playerStatuses = data[1].player_statuses;
+            this.joinRoom(this.roomId);
+
+        } else if (response.status === 204) {
+            this.$router.push('/404');  
+        }
+
         })
         .catch(error => {
             console.error('Ошибка при получении данных:', error);
         });
         },
 
-        leaveTable() {
-            this.thisUserID = localStorage.getItem('user_id');
+        leaveTable() {            
             this.leaveData.user_id = this.thisUserID;
             this.leaveData.table_id = this.tableId;
             axios.post(`${this.baseUrl}/API/leave_table`,this.leaveData)
             .then(response => {
                 this.updateTablesHall();
-                this.leaveRoom(this.roomId);
-                this.setActiveTable(0);
+                this.leaveRoom(this.roomId);                
                 localStorage.removeItem('user_active_table');
                 this.$router.replace(`/tables`);
                 console.log('METHOD leaveTable: ', response)
@@ -327,13 +336,21 @@ export default {
             console.log(`User ${this.thisUserID} left room ${roomId}`)
         },
         updateTablesHall() {
-            console.log('UpdateTableHall activated');
             this.$socket.emit('update_tables_hall');            
         },
 
-        handleUpdateRoom() {
-            this.getTable();
-            console.log('Received new data about tables from server');
+        handleUpdateRoom(data) {
+            let userBack = 0;
+            if (data && data.user_id) {
+                userBack = data.user_id;
+            }
+            console.log('HANDLE UPDATE ROOM User = ', userBack)
+            if (userBack != this.thisUserID) {                
+                this.getTable();
+                console.log('HANDLE UPDATE ROOM UPDATE SCREEN')
+            } else {
+                console.log('HANDLE UPDATE ROOM SCREEN NOT UPDATED')
+            }
         },
 
         truncatedNicknameText(nicknameText) {
@@ -412,7 +429,7 @@ export default {
                 // Если прошло достаточно времени, останавливаем интервал и вызываем defaultAction()
                 if (elapsed >= this.table.interval) {
                     console.log('CLEAR INTERVAL and DEFAULT ACTION');
-                    this.defaultAction();
+                    // this.defaultAction();
                     clearInterval(this.timer);                                                   
                 }
             }, 1000); // Обновление каждую секунду
@@ -539,11 +556,78 @@ export default {
                     })
                     .catch(error => {
                         console.error('Ошибка при получении данных:', error);
-                    });            
+                    });
         },
 
         bettingBlind(bet) {
-            console.log('BETTING BLIND ', bet);
+            if (bet * this.table.min_bet > this.playerBalance) {
+                alert('You don’t have enough to bet on')
+                console.log('BETTING BET: TOO POOR FOR BETTING');    
+            } else {
+                console.log('BETTING BLIND trying', bet);
+                const playerBet = {
+                    user_id: this.thisUserID,
+                    game_id: this.game.id,
+                    bet: bet * this.table.min_bet,
+                }
+                axios.post(`${this.baseUrl}/API/blind`, playerBet)
+                    .then(response => {
+                        console.log('BETTING BLIND: PLAYER BETS ', response);
+                        this.getTable();
+                        this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при получении данных:', error);
+                    });
+            }            
+        },
+
+        bettingBlindCheck() {
+            const playerBlindCheck = {
+                user_id: this.thisUserID,
+                game_id: this.game.id
+            }
+            axios.post(`${this.baseUrl}/API/blind_check`, playerBlindCheck)
+                .then(response => {
+                    console.log('BETTING BLIND CHECK: ', response);
+                    this.getTable();
+                    this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
+                })
+                .catch(error => {
+                    console.error('Ошибка при получении данных:', error);
+                });
+        },
+
+        bettingAziHalfPot() {
+            const playerAziIn = {
+                user_id: this.thisUserID,
+                game_id: this.game.id
+            }
+            axios.post(`${this.baseUrl}/API/azi_in`, playerAziIn)
+                    .then(response => {
+                        console.log('BETTING AZI HALF POT ', response);
+                        this.getTable();
+                        this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при получении данных:', error);
+                    });              
+        },
+
+        bettingAziDecline() {
+            const playerAziOut = {
+                user_id: this.thisUserID,
+                game_id: this.game.id
+            }
+            axios.post(`${this.baseUrl}/API/azi_out`, playerAziOut)
+                    .then(response => {
+                        console.log('BETTING AZI OUT ', response);
+                        this.getTable();
+                        this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при получении данных:', error);
+                    });  
         },
 
         dropThisPlayer() {
@@ -551,7 +635,6 @@ export default {
             alert('You are have not enough funds for playing!');
             this.updateTablesHall();
             this.leaveRoom(this.roomId);
-            this.setActiveTable(0);
             localStorage.removeItem('user_active_table');
             this.$router.replace(`/tables`);
             this.$store.commit('incrementStatusHeader');
@@ -596,9 +679,39 @@ export default {
                             .catch(error => {
                             console.error('Error logout user:', error);
                         })
+                    } else if (this.game.stage == 5) {
+                        axios.post(this.baseUrl + '/API/turn_1', droppedCard)
+                            .then(response => {
+                                console.log('Turn 1 done', response.data.message);                                
+                                this.getTable();
+                                this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
+                            })
+                            .catch(error => {
+                            console.error('Error logout user:', error);
+                        })
+                    } else if (this.game.stage == 6) {
+                        axios.post(this.baseUrl + '/API/turn_2', droppedCard)
+                            .then(response => {
+                                console.log('Turn 1 done', response.data.message);                                
+                                this.getTable();
+                                this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
+                            })
+                            .catch(error => {
+                            console.error('Error logout user:', error);
+                        })
+                    } else if (this.game.stage == 7) {
+                        axios.post(this.baseUrl + '/API/turn_3', droppedCard)
+                            .then(response => {
+                                console.log('Turn 1 done', response.data.message);                                
+                                this.getTable();
+                                this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
+                            })
+                            .catch(error => {
+                            console.error('Error logout user:', error);
+                        })
                     } else {
                         console.error('Bad time for discarding !!!')
-                    }
+                    } 
                 } 
             } catch (error) {   
                 console.log('CARD INVALID DROPPED:');
@@ -619,7 +732,6 @@ export default {
     },
 
     computed: {
-        ...mapGetters(['userActiveTable']),
         isRivalsQuantityEven() {
             return this.rivalsQuantity % 2 === 0;
         },
@@ -672,39 +784,54 @@ export default {
                             <div class="row align-items-center, main" style="height: 54%;">
                                 <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">
                                     <div class="row">
-                                        <div class="col-8">
+                                        <div class="col-1"></div>
+                                        <div v-if="(game.players.indexOf(rival) != -1) && (game.stage != 11) && (game.stage != 9)" class="col-10">
                                             <img v-if="countZeros(game.players.indexOf(rival)) == 0" class="my-1" :src="cardRivalImagePath[4]" style="height: 12vh; margin-left: 0px; position: absolute;" :draggable="false">
                                             <img v-if="countZeros(game.players.indexOf(rival)) == 1" class="my-1" :src="cardRivalImagePath[3]" style="height: 12vh; margin-left: 0px; position: absolute;" :draggable="false">
                                             <img v-if="countZeros(game.players.indexOf(rival)) == 2" class="my-1" :src="cardRivalImagePath[2]" style="height: 12vh; margin-left: 0px; position: absolute;" :draggable="false">
-                                            <img v-if="countZeros(game.players.indexOf(rival)) == 3" class="my-1" :src="cardRivalImagePath[1]" style="height: 12vh; margin-left: 0px; position: absolute;" :draggable="false">
-                                            
+                                            <img v-if="countZeros(game.players.indexOf(rival)) == 3" class="my-1" :src="cardRivalImagePath[1]" style="height: 12vh; margin-left: 0px; position: absolute;" :draggable="false">                                            
                                         </div>
-                                        <div class="col-4 align-items-end">
-                                            <img class="my-1" :src="cardImagePath[25]" style="height: 12vh; margin-left: 0px; position: absolute;" :draggable="false">
-                                        </div>                                        
+                                        <div v-if="(game.players.indexOf(rival) != -1) && (game.stage == 11) && (game.players.indexOf(rival) == game.winner - 1)" class="col-10 col align-items-center rounded-4 mt-2" style="background: ForestGreen; height: 16vh;">
+                                            <div class="row align-items-center justify-content-center" style="height: 35%;"><h5 class="text-center align-middle mt-2" style="color: aliceblue;">game# <b>{{ game.id }}</b></h5></div>
+                                            <div class="row align-items-center justify-content-center" style="height: 30%;"><h2 class="text-center align-middle" style="color: aliceblue;"><b>WINNER</b></h2></div>
+                                            <div class="row align-items-center justify-content-center" style="height: 35%;"><h5 class="text-center align-middle" style="color: aliceblue;">pot: <b>{{ textNumber(this.game.pot) }}</b></h5></div>                                        
+                                        </div>
+                                        <div v-if="(game.players.indexOf(rival) != -1) && (game.stage == 9) && (game.status[game.players.indexOf(rival)] == 11)" class="col-10 d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: SlateBlue; height: 10vh;">
+                                            <div class="align-items-center justify-content-center"><h3 class="text-center align-middle" style="color: aliceblue;"><b>AZI-in</b></h3></div>
+                                        </div>
+                                        <div v-if="(game.players.indexOf(rival) != -1) && (game.stage == 9) && (game.status[game.players.indexOf(rival)] == 12)" class="col-10 d-flex justify-content-center col align-items-center rounded-4 mt-2" style="height: 10vh;">
+                                            <div class="row align-items-center justify-content-center"><h3 class="text-center align-middle" style="color: aliceblue;"><b>AZI-out</b></h3></div>
+                                        </div>
+                                        <div v-if="(game.players.indexOf(rival) != -1) && (game.stage == 9) && (game.status[game.players.indexOf(rival)] == 13)" class="col-10 d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: SlateBlue; height: 10vh;">
+                                            <div class="row align-items-center justify-content-center"><h3 class="text-center align-middle" style="color: aliceblue;"><b>AZI burst in</b></h3></div>
+                                        </div>
+                                        <div v-if="(game.players.indexOf(rival) != -1) && (game.stage == 9) && (game.status[game.players.indexOf(rival)] == 14)" class="col-10 d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: #ffc107; height: 10vh;">
+                                            <div class="row align-items-center justify-content-center"><h3 class="text-center align-middle" style="color: aliceblue;"><b>refuse burst in</b></h3></div>
+                                        </div>
+                                        <div class="col-1"></div>                                        
                                     </div>
                                 </div>  
                             </div>
 
                             <!-- Верхний ряд 3/4 из 3 - Реплики соперников -->
-                            <div class="row align-items-center, main" style="height: 21%;">
+                            <div  class="row align-items-center, main" style="height: 21%;">
                                 <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">
                                     <div class="row" style="height:100%">
-                                        <div class="col-9">
+                                        <div v-if="(game.players.indexOf(rival) != -1) && (game.usersays[game.players.indexOf(rival)] != '') && (game.stage != 11)" class="col-9">
                                             <div class="d-flex align-items-center rounded-3 mb-1 w-100" style="height:90%; background:white; white-space: pre-line;">
                                                 <h6 class="ms-3 mt-1" style="color: black">{{ game.usersays[game.players.indexOf(rival)] }}</h6>
                                             </div>
                                         </div>
-                                        <div class="col-3 align-middle">                  
-                                            <h3 class="text-center align-middle" style=""><b>2</b></h3>
-                                        </div>                                        
+                                        <div v-if="game.players.indexOf(rival) != -1 && game.hodor == game.players.indexOf(rival) + 1 && (game.stage != 11)" class="col-3 align-middle" title="Attacker player">
+                                            <h3 class="text-center align-middle" style="cursor: default;"><b>A</b></h3>
+                                        </div>
                                     </div>
                                 </div>                                
                             </div>
                             <!-- Верхний ряд 4/4 из 3 -  строка прогресса времени соперников -->
                             <div class="row align-items-end, main" style="height: 10%; grid; place-items: center;">
                                 <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">
-                                    <div v-if="((game.speaker_id == rival) || (game.stage == 4)) && ((game.status[game.players.indexOf(rival)] !== 1) && game.status[game.players.indexOf(rival)] !== 10)">
+                                    <div v-if="(((game.speaker_id == rival) && !((game.stage == 4) || (game.stage == 9))) || (game.stage == 4) || (game.stage == 11) || ((game.stage == 9) && (game.status[game.players.indexOf(rival)] == 12))) && ((game.status[game.players.indexOf(rival)] !== 1) && game.status[game.players.indexOf(rival)] !== 10)">
                                     <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="progressValue" aria-valuemin="0" aria-valuemax="100">
                                         <div class="progress-bar progress-bar-striped progress-bar-animated" :style="{ width: progressWidth }">{{ this.table.interval - progressElapsed }}</div>
                                     </div>
@@ -734,7 +861,7 @@ export default {
                                             <div class="d-flex align-items-center justify-content-center">
                                                 
                                             </div>
-                                            <div class="d-flex align-items-center justify-content-center">
+                                            <div v-if="game.stage != 11" class="d-flex align-items-center justify-content-center">
                                                 <h5 style="color: white">{{ textNumber(this.game.pot) }}</h5>
                                             </div>
                                             <div class="d-flex align-items-center justify-content-center">
@@ -751,31 +878,31 @@ export default {
 
                                     <!--Взятки соперника-->
                                     <div class="row" style="height: 25%">
-                                        <div v-for="rival in this.rivals" :key="rival" class="col align-items-center" :style="{ background: `#${rival * 112}` }">
+                                        <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">
                                             <div class="row" >
-                                                <div class="col-1">                                         
-                                                    <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 0px; position: absolute;">
-                                                    <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 15px; position: absolute;">
-                                                    <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 30px; position: absolute;">
-                                                    <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 45px; position: absolute;">
-                                                    <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 60px; position: absolute;">
-                                                    <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 75px; position: absolute;">
+                                                <div v-if="(game.players.indexOf(rival) == game.turn1win - 1)" class="col-1">                                         
+                                                    <img v-if="game.card_place1[0] != 0" class="my-1" :src="cardImagePath[game.card_place1[0]]" style="height: 15vh; margin-left: 0px; position: absolute;">
+                                                    <img v-if="game.card_place1[1] != 0" class="my-1" :src="cardImagePath[game.card_place1[1]]" style="height: 15vh; margin-left: 15px; position: absolute;">
+                                                    <img v-if="game.card_place1[2] != 0" class="my-1" :src="cardImagePath[game.card_place1[2]]" style="height: 15vh; margin-left: 30px; position: absolute;">
+                                                    <img v-if="game.card_place1[3] != 0" class="my-1" :src="cardImagePath[game.card_place1[3]]" style="height: 15vh; margin-left: 45px; position: absolute;">
+                                                    <img v-if="game.card_place1[4] != 0" class="my-1" :src="cardImagePath[game.card_place1[4]]" style="height: 15vh; margin-left: 60px; position: absolute;">
+                                                    <img v-if="game.card_place1[5] != 0" class="my-1" :src="cardImagePath[game.card_place1[5]]" style="height: 15vh; margin-left: 75px; position: absolute;">
                                                 </div>
-                                                <div class="col-1" style="margin-top: 35px">
-                                                    <img class="my-1 " :src="cardImagePath[25]" style="height: 15vh; margin-left: 0px; margin-top: 20px; position: absolute;">
-                                                    <img class="my-1 " :src="cardImagePath[25]" style="height: 15vh; margin-left: 15px; margin-top: 20px; position: absolute;">
-                                                    <img class="my-1 " :src="cardImagePath[25]" style="height: 15vh; margin-left: 30px; margin-top: 20px; position: absolute;">
-                                                    <img class="my-1 " :src="cardImagePath[25]" style="height: 15vh; margin-left: 45px; margin-top: 20px; position: absolute;">
-                                                    <img class="my-1 " :src="cardImagePath[25]" style="height: 15vh; margin-left: 60px; margin-top: 20px; position: absolute;">
-                                                    <img class="my-1 " :src="cardImagePath[25]" style="height: 15vh; margin-left: 75px; margin-top: 20px; position: absolute;">
+                                                <div v-if="(game.players.indexOf(rival) == game.turn2win - 1)" class="col-1" style="margin-top: 35px">
+                                                    <img v-if="game.card_place2[0] != 0" class="my-1" :src="cardImagePath[game.card_place2[0]]" style="height: 15vh; margin-left: 0px; margin-top: 20px; position: absolute;">
+                                                    <img v-if="game.card_place2[1] != 0" class="my-1" :src="cardImagePath[game.card_place2[1]]" style="height: 15vh; margin-left: 15px; margin-top: 20px; position: absolute;">
+                                                    <img v-if="game.card_place2[2] != 0" class="my-1" :src="cardImagePath[game.card_place2[2]]" style="height: 15vh; margin-left: 30px; margin-top: 20px; position: absolute;">
+                                                    <img v-if="game.card_place2[3] != 0" class="my-1" :src="cardImagePath[game.card_place2[3]]" style="height: 15vh; margin-left: 45px; margin-top: 20px; position: absolute;">
+                                                    <img v-if="game.card_place2[4] != 0" class="my-1" :src="cardImagePath[game.card_place2[4]]" style="height: 15vh; margin-left: 60px; margin-top: 20px; position: absolute;">
+                                                    <img v-if="game.card_place2[5] != 0" class="my-1" :src="cardImagePath[game.card_place2[5]]" style="height: 15vh; margin-left: 75px; margin-top: 20px; position: absolute;">
                                                 </div>
-                                                <div class="col-1" style="margin-top: 70px">
-                                                    <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 0px; margin-top: 40px; position: absolute;">
-                                                    <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 15px; margin-top: 40px; position: absolute;">
-                                                    <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 30px; margin-top: 40px; position: absolute;">
-                                                    <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 45px; margin-top: 40px; position: absolute;">
-                                                    <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 60px; margin-top: 40px; position: absolute;">
-                                                    <img class="my-1" :src="cardImagePath[25]" style="height: 15vh; margin-left: 75px; margin-top: 40px; position: absolute;">
+                                                <div v-if="(game.players.indexOf(rival) == game.turn3win - 1)" class="col-1" style="margin-top: 70px">
+                                                    <img v-if="game.card_place3[0] != 0" class="my-1" :src="cardImagePath[game.card_place3[0]]" style="height: 15vh; margin-left: 0px; margin-top: 40px; position: absolute;">
+                                                    <img v-if="game.card_place3[1] != 0" class="my-1" :src="cardImagePath[game.card_place3[1]]" style="height: 15vh; margin-left: 15px; margin-top: 40px; position: absolute;">
+                                                    <img v-if="game.card_place3[2] != 0" class="my-1" :src="cardImagePath[game.card_place3[2]]" style="height: 15vh; margin-left: 30px; margin-top: 40px; position: absolute;">
+                                                    <img v-if="game.card_place3[3] != 0" class="my-1" :src="cardImagePath[game.card_place3[3]]" style="height: 15vh; margin-left: 45px; margin-top: 40px; position: absolute;">
+                                                    <img v-if="game.card_place3[4] != 0" class="my-1" :src="cardImagePath[game.card_place3[4]]" style="height: 15vh; margin-left: 60px; margin-top: 40px; position: absolute;">
+                                                    <img v-if="game.card_place3[5] != 0" class="my-1" :src="cardImagePath[game.card_place3[5]]" style="height: 15vh; margin-left: 75px; margin-top: 40px; position: absolute;">
                                                 </div>
                                                 <div class="col-9">
                                                 </div>
@@ -788,8 +915,8 @@ export default {
                                             <div class="col-10" style="height: 100%">
                                                 <!--Ходы соперника  -->
                                                 <div class="row" style="height: 50%">                                        
-                                                    <div v-for="rival in this.rivals" :key="rival"  class="col" style="width: {{ col_width }}%; place-items: center;">
-                                                        <img class="my-1" :src="cardImagePath[14]" style="height: 15vh; position: absolute;">
+                                                    <div v-for="rival in this.rivals" :key="rival"  class="col" style="width: {{ col_width }}%; place-items: center;">                                                       
+                                                        <img v-if="(game.card_place[game.players.indexOf(rival)] != 0)" class="my-1" :src="cardImagePath[game.card_place[game.players.indexOf(rival)]]" style="height: 15vh; position: absolute;">
                                                     </div>
                                                 </div>
                                                 <!--Ходы пользователя  -->
@@ -798,12 +925,12 @@ export default {
                                                     </div>
                                                     <div class="col-1">
                                                         <div v-if="isRivalsQuantityEven" style="position: relative;">
-                                                            <img class="my-1" :src="cardImagePath[17]" style="height: 15vh; position: absolute; top: 0; right: 0;">
+                                                            <img v-if= "(game.card_place[playerPos - 1] != 0)" class="my-1" :src="cardImagePath[game.card_place[playerPos - 1]]" style="height: 15vh; position: absolute; top: 0; right: 0;">
                                                         </div>
                                                     </div>
                                                     <div class="col-1">
                                                         <div v-if="!isRivalsQuantityEven" style="position: relative;">
-                                                            <img class="my-1" :src="cardImagePath[19]" style="height: 15vh; position: absolute; top: 0; right: 0;">
+                                                            <img v-if= "(game.card_place[playerPos - 1] != 0)" class="my-1" :src="cardImagePath[game.card_place[playerPos - 1]]" style="height: 15vh; position: absolute; top: 0; right: 0;">
                                                         </div>
                                                     </div>
                                                     <div class="col-5">
@@ -814,37 +941,35 @@ export default {
                                     </div>
                                     <!--Взятки пользователя-->
                                     <div class="row" style="height: 25%">
-                                        <div class="col-2" style="position: relative;">
-                                            <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 15px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[34]" style="height: 15vh; margin-left: 30px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[33]" style="height: 15vh; margin-left: 30px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[32]" style="height: 15vh; margin-left: 45px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[31]" style="height: 15vh; margin-left: 60px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[30]" style="height: 15vh; margin-left: 75px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[29]" style="height: 15vh; margin-left: 90px; position: absolute; bottom: 0; left: 0">
+                                        <div v-if="playerPos == game.turn1win" class="col-2" style="position: relative;">
+                                            <img v-if="game.card_place1[0] != 0" class="my-1" :src="cardImagePath[game.card_place1[0]]" style="height: 15vh; margin-left: 15px; position: absolute; bottom: 0; left: 0">
+                                            <img v-if="game.card_place1[1] != 0" class="my-1" :src="cardImagePath[game.card_place1[1]]" style="height: 15vh; margin-left: 30px; position: absolute; bottom: 0; left: 0">
+                                            <img v-if="game.card_place1[2] != 0" class="my-1" :src="cardImagePath[game.card_place1[2]]" style="height: 15vh; margin-left: 45px; position: absolute; bottom: 0; left: 0">
+                                            <img v-if="game.card_place1[3] != 0" class="my-1" :src="cardImagePath[game.card_place1[3]]" style="height: 15vh; margin-left: 60px; position: absolute; bottom: 0; left: 0">
+                                            <img v-if="game.card_place1[4] != 0" class="my-1" :src="cardImagePath[game.card_place1[4]]" style="height: 15vh; margin-left: 75px; position: absolute; bottom: 0; left: 0">
+                                            <img v-if="game.card_place1[5] != 0" class="my-1" :src="cardImagePath[game.card_place1[5]]" style="height: 15vh; margin-left: 90px; position: absolute; bottom: 0; left: 0">                                            
                                         </div>
-                                        <div class="col-2" style="position: relative;">
-                                            <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 15px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 30px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 30px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 45px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 60px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 75px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 90px; position: absolute; bottom: 0; left: 0">
+                                        <div v-if="playerPos == game.turn2win" class="col-2" style="position: relative;">
+                                            <img v-if="game.card_place2[0] != 0" class="my-1" :src="cardImagePath[game.card_place2[0]]" style="height: 15vh; margin-left: 15px; position: absolute; bottom: 0; left: 0">
+                                            <img v-if="game.card_place2[1] != 0" class="my-1" :src="cardImagePath[game.card_place2[1]]" style="height: 15vh; margin-left: 30px; position: absolute; bottom: 0; left: 0">
+                                            <img v-if="game.card_place2[2] != 0" class="my-1" :src="cardImagePath[game.card_place2[2]]" style="height: 15vh; margin-left: 45px; position: absolute; bottom: 0; left: 0">
+                                            <img v-if="game.card_place2[3] != 0" class="my-1" :src="cardImagePath[game.card_place2[3]]" style="height: 15vh; margin-left: 60px; position: absolute; bottom: 0; left: 0">
+                                            <img v-if="game.card_place2[4] != 0" class="my-1" :src="cardImagePath[game.card_place2[4]]" style="height: 15vh; margin-left: 75px; position: absolute; bottom: 0; left: 0">
+                                            <img v-if="game.card_place2[5] != 0" class="my-1" :src="cardImagePath[game.card_place2[5]]" style="height: 15vh; margin-left: 90px; position: absolute; bottom: 0; left: 0">                                    
                                         </div>
-                                        <div class="col-2" style="position: relative;">
-                                            <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 15px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 30px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 30px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 45px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 60px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 75px; position: absolute; bottom: 0; left: 0">
-                                            <img class="my-1" :src="cardImagePath[35]" style="height: 15vh; margin-left: 90px; position: absolute; bottom: 0; left: 0">
+                                        <div v-if="playerPos == game.turn3win" class="col-2" style="position: relative;">
+                                            <img v-if="game.card_place3[0] != 0" class="my-1" :src="cardImagePath[game.card_place3[0]]" style="height: 15vh; margin-left: 15px; position: absolute; bottom: 0; left: 0">
+                                            <img v-if="game.card_place3[1] != 0" class="my-1" :src="cardImagePath[game.card_place3[1]]" style="height: 15vh; margin-left: 30px; position: absolute; bottom: 0; left: 0">
+                                            <img v-if="game.card_place3[2] != 0" class="my-1" :src="cardImagePath[game.card_place3[2]]" style="height: 15vh; margin-left: 45px; position: absolute; bottom: 0; left: 0">
+                                            <img v-if="game.card_place3[3] != 0" class="my-1" :src="cardImagePath[game.card_place3[3]]" style="height: 15vh; margin-left: 60px; position: absolute; bottom: 0; left: 0">
+                                            <img v-if="game.card_place3[4] != 0" class="my-1" :src="cardImagePath[game.card_place3[4]]" style="height: 15vh; margin-left: 75px; position: absolute; bottom: 0; left: 0">
+                                            <img v-if="game.card_place3[5] != 0" class="my-1" :src="cardImagePath[game.card_place3[5]]" style="height: 15vh; margin-left: 90px; position: absolute; bottom: 0; left: 0">
                                         </div>
                                         <div class="col-6 d-flex align-items-center justify-content-center">
                                         
                                         <!--  Тестовый прогрессбар -->
                                         {{ game.status[playerPos - 1] }}
+
                                         </div>
                                     </div>
                                 </div>
@@ -893,17 +1018,20 @@ export default {
                                         </div>
                                     </div>
                                     <div class="col-5 align-self-center">
-                                        <div @click="testWindow" class="d-flex justify-content-center align-items-center rounded-3" style="background: Chocolate">
+                                        <div class="d-flex justify-content-center align-items-center rounded-3" style="background: Chocolate">
                                             <h5 style="color: white">{{ textNumber(this.playerBalance) }}</h5>
                                         </div>  
                                     </div>
                                 </div>
                                 <!--   Слово пользователя-->        
                                 <div class="row align-items-end" style="; height: 33%">
-                                    <div class="align-self-center">
+                                    <div class="col-10 align-self-center">
                                         <div class="d-flex justify-content-center align-items-center rounded-3" style="background:Honeydew">
                                             <h5 style="color: black">{{ game.usersays[playerPos - 1] }}</h5>
                                         </div>  
+                                    </div>
+                                    <div v-if="game.hodor == playerPos" class="col-2 justify-content-center align-items-center" title="Attacker player">
+                                        <div><h3 class="text-center align-middle" style="cursor: default;"><b>A</b></h3></div>
                                     </div>
                                 </div>
                             </div>
@@ -911,13 +1039,31 @@ export default {
                         </div>
                         <!--    2 колонка нижнего ряда - карты пользователя-->
                         <div class="col" style="display: grid; place-items: center">                    
-
-                            <div v-if="(game.status[playerPos - 1] != 0) && (game.status[playerPos - 1] != 1) && (game.status[playerPos - 1] != 10)" ref="userCardDiv" class="row" style="height:100%; overflow: hidden;">        
+                            <!--  Карты пользователя-->
+                            <div v-if="(game.status[playerPos - 1] != 0) && (game.status[playerPos - 1] != 1) && (game.status[playerPos - 1] != 10) && (game.stage < 8)" ref="userCardDiv" class="row" style="height:100%; overflow: hidden;">        
                                 <div v-for="item in myCards" :key="item.pos" class="col" style="padding: 0; margin:0; height:100%">
                                     <div v-if="(item.card !=0)" style="padding: 0; margin:0; height: 100%;">
                                         <img :src="item.image" :alt="item.name" class="draggable-item" :draggable="true" @dragstart="startDrag($event, item)">
                                     </div>
                                 </div>
+                            </div>
+                            <!--  Не карты пользователя -->
+                            <div v-if="(game.stage == 11) && (game.players.indexOf(thisUserID) == game.winner - 1)" class="container rounded-4 m-2" style="background: ForestGreen; height: 16vh;">
+                                <div class="row align-items-center justify-content-center" style="height: 35%;"><h5 class="text-center align-middle mt-2" style="color: aliceblue;">game# <b>{{ game.id }}</b></h5></div>
+                                <div class="row align-items-center justify-content-center" style="height: 30%;"><h2 class="text-center align-middle" style="color: aliceblue;"><b>WINNER</b></h2></div>
+                                <div class="row align-items-center justify-content-center" style="height: 35%;"><h5 class="text-center align-middle" style="color: aliceblue;">pot: <b>{{ textNumber(this.game.pot) }}</b></h5></div>                                        
+                            </div>
+                            <div v-if="(game.stage == 9) && (game.status[game.players.indexOf(thisUserID)] == 11)" class="col-10 d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: SlateBlue; height: 10vh;">
+                                <div class="align-items-center justify-content-center"><h3 class="text-center align-middle" style="color: aliceblue;"><b>AZI-in</b></h3></div>
+                            </div>
+                            <div v-if="(game.stage == 9) && (game.status[game.players.indexOf(thisUserID)] == 12)" class="col-10 d-flex justify-content-center col align-items-center rounded-4 mt-2" style="height: 10vh;">
+                                <div class="row align-items-center justify-content-center"><h3 class="text-center align-middle" style="color: aliceblue;"><b>AZI-out</b></h3></div>
+                            </div>
+                            <div v-if="(game.stage == 9) && (game.status[game.players.indexOf(thisUserID)] == 13)" class="col-10 d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: SlateBlue; height: 10vh;">
+                                <div class="row align-items-center justify-content-center"><h3 class="text-center align-middle" style="color: aliceblue;"><b>AZI burst in</b></h3></div>
+                            </div>
+                            <div v-if="(game.stage == 9) && (game.status[game.players.indexOf(thisUserID)] == 14)" class="col-10 d-flex justify-content-center align-items-center rounded-4 mt-2" style="background: #ffc107; height: 10vh;">
+                                <div class="row align-items-center justify-content-center"><h3 class="text-center align-middle" style="color: aliceblue;"><b>refuse burst in</b></h3></div>
                             </div>
                             
                         </div>
@@ -927,7 +1073,7 @@ export default {
                                 <div class="container" style="height: 100%; width: 100%;">
                                     <!-- 1/3 строка 3 колонки нижнего ряда - прогресс бар времени пользователя                     -->
                                     <div class="row align-items-center justify-content-center" style="height: 20%;">
-                                        <div v-if="(game.speaker_id == this.thisUserID) || (game.stage == 4)" class="justify-content-center" style="width: 80%">
+                                        <div v-if="((game.speaker_id == this.thisUserID) && !((game.stage == 9) && (game.status[playerPos - 1] == 11))) || (game.stage == 4) || (game.stage == 11) || ((game.stage == 9) && (game.status[playerPos - 1] == 12))" class="justify-content-center" style="width: 80%">
                                             <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="progressValue" aria-valuemin="0" aria-valuemax="100">
                                                 <div class="progress-bar progress-bar-striped progress-bar-animated" :style="{ width: progressWidth }">{{ this.table.interval - progressElapsed }}</div>
                                             </div>
@@ -935,18 +1081,11 @@ export default {
                                     </div>
                                     <!-- Блок для кнопок / полезных советов -->
                                     <div class="row align-items-center justify-content-center" style="height: 80%;">
-                                        <div v-if="(game.stage == 1 || game.stage == 3)" class="container" style="height: 100%; width: 100%;">
+                                        <div v-if="(game.stage == 3)" class="container" style="height: 100%; width: 100%;">
                                             <!--                      Кнопки для ставок -->
                                             <div class="row align-items-center, main" style="height: 50%; display: grid; place-items: center;" >
                                                 <div style="height: 50%; display: flex; justify-content: center; align-items: center;">
-                                                    <div v-if="this.game.speaker_id == this.thisUserID" class="d-flex flex-wrap align-items-center justify-content-center w-100">
-
-                                                        <div v-if="game.stage == 1" class="btn-group dropup flex-grow-1">
-                                                            <button type="button" class="btn btn-primary dropdown-toggle flex-grow-1 m-1" data-bs-toggle="dropdown" aria-expanded="false">Blind</button>
-                                                            <ul class="dropdown-menu">
-                                                                <li v-for="myBlindBet in [5, 4, 3, 2, 1]" :key="myBlindBet" @click="bettingBlind(myBlindBet)"><a class="dropdown-item" href="#">{{ this.textNumber(this.table.min_bet * myBlindBet) }} (call {{ this.textNumber(this.table.min_bet * myBlindBet * 2) }})</a></li>
-                                                            </ul>
-                                                        </div>
+                                                    <div v-if="this.game.speaker_id == this.thisUserID" class="d-flex flex-wrap align-items-center justify-content-center w-100">                                                        
                                                         <div v-if="(game.stage == 3) && (game.players_bet.every(item => item === 0)) && (!game.top_bet)" class="btn-group dropup flex-grow-1">
                                                             <button type="button" class="btn btn-primary dropdown-toggle flex-grow-1 m-1" data-bs-toggle="dropdown" aria-expanded="false">Bet</button>
                                                             <ul class="dropdown-menu">
@@ -981,6 +1120,36 @@ export default {
                                                 <h4 class="text-center"> Drop one of your cards </h4>
                                             </div>
                                         </div>
+                                        <!--  Кнопка врезки в Ази -->
+                                        <div v-if="(game.stage == 9) && (game.status[playerPos - 1] == 12)" class="container" style="height: 100%; width: 100%;">
+                                            <div class="btn-group dropup flex-grow-1 w-100" style="height: 50%; display: grid; place-items: center;" >
+                                                <button type="button" @click="bettingAziHalfPot" class="btn btn-dark flex-grow-1 m-1 w-100">Half-pot AZI-in: {{ textNumber(game.azi_price) }}</button>
+                                            </div>
+                                            <div class="btn-group dropup flex-grow-1 w-100" style="height: 50%; display: grid; place-items: center;" >
+                                                <button type="button" @click="bettingAziDecline" class="btn btn-warning flex-grow-1 m-1 w-100">Refuse AZI</button>
+                                            </div>
+                                        </div>
+                                        <!--  Кнопка для ставки в темную  -->
+                                        <div v-if="(game.stage == 1) && (this.game.speaker_id == this.thisUserID)" class="container" style="height: 100%; width: 100%;">
+                                            <div v-if="game.stage == 1" class="btn-group dropup flex-grow-1 w-100" style="height: 50%; display: grid; place-items: center;">
+                                                <button type="button" class="btn btn-primary dropdown-toggle flex-grow-1 m-1 w-100" data-bs-toggle="dropdown" aria-expanded="false">Blind</button>
+                                                <ul class="dropdown-menu">
+                                                    <li v-for="myBlindBet in [5, 4, 3, 2, 1]" :key="myBlindBet" @click="bettingBlind(myBlindBet)"><a class="dropdown-item" href="#">{{ this.textNumber(this.table.min_bet * myBlindBet) }} (call {{ this.textNumber(this.table.min_bet * myBlindBet * 2) }})</a></li>
+                                                </ul>
+                                            </div>
+                                            <div class="btn-group dropup flex-grow-1 w-100" style="height: 50%; display: grid; place-items: center;" >
+                                                <button type="button" @click="bettingBlindCheck" class="btn btn-secondary flex-grow-1 m-1 w-100">Without blind bet</button>
+                                            </div>                                            
+                                        </div>
+
+                                        <div v-if="(game.stage == 11)" class="container" style="height: 100%; width: 100%;">
+                                            <div v-if="this.playerBalance >= game.min_bet" class="btn-group dropup flex-grow-1 w-100" style="height: 50%; display: grid; place-items: center;">
+                                                <button type="button" @click="startNewGame" class="btn btn-primary flex-grow-1 m-1 w-100">Join new game</button>
+                                            </div>
+                                            <div class="btn-group dropup flex-grow-1 w-100" style="height: 50%; display: grid; place-items: center;" >
+                                                <button type="button" @click="leaveTable" class="btn btn-danger flex-grow-1 m-1 w-100">Leave table</button>
+                                            </div>                                            
+                                        </div>
 
                                     </div>
 
@@ -1007,7 +1176,7 @@ export default {
                                 </div>
                             </div>
                             <div class="col-4 d-flex justify-content-center align-items-center">
-                                <div class="d-flex flex-grow-1" style="width: 100%; bsckground: #666">
+                                <div v-if="(game.status[playerPos-1] == 0) || (game.status[playerPos-1] == 1) || (game.status[playerPos-1] == 10) || (game.status[playerPos-1] == 12) || (game.status[playerPos-1] == 14)" class="d-flex flex-grow-1" style="width: 100%; bsckground: #666">
                                     <button @click="leaveTable" class="btn btn-danger flex-grow-1 w-100">Leave Table</button>
                                 </div>
                             </div>
