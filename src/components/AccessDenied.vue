@@ -15,7 +15,11 @@ export default {
     },
     mounted() {
     },
-
+    methods: {
+        goToHomePage() {
+                this.$router.replace('/');
+        }
+    }
 };
 </script>
 
@@ -29,7 +33,7 @@ export default {
                         <p class="fs-5">You do not have permission to view this page</p>
                         <p>You may need to log in or this page is only for users with administrator rights.</p>
                         <p>
-                            <button class="btn btn-primary">Return to homepage</button>
+                            <button @click="goToHomePage" class="btn btn-primary">Return to homepage</button>
                         </p>
                     </div>
                 </div>

@@ -153,7 +153,7 @@ export default {
             progressWidth: 0,
             progressElapsed: 0,
             timer: null,
-            statusColor: ['Silver', 'Maroon', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', '#ffc107','indigo','Silver','indigo','#ffc107'],
+            statusColor: ['Silver', 'Maroon', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', 'indigo', '#ffc107', 'indigo', 'Silver', 'indigo', '#ffc107', 'indigo', 'indigo'],
             playerStatuses: [0, 0, 0, 0, 0, 0],
             gameStages: ['Ante betting', 'Blind betting', 'Dealing', 'First turn betting', 'Discard extra card', 'First turn', 'Second turn', 'Third turn', 'Winner checking','Waiting for players to AZI joining', 'All check - Re-dealing', 'End of the Game'],
         };
@@ -171,8 +171,7 @@ export default {
         this.isWeb3Auth = checkWeb3();
         if (this.isAuth == false && this.isWeb3Auth == false) {
             this.$router.push('/access_denied');
-        }
-        
+        }        
         this.tableRequest.user_id = this.thisUserID;
         this.tableRequest.table_id = Number(this.$route.params.table_id);
         this.tableRequest.table_password = '';
@@ -185,6 +184,7 @@ export default {
         this.cardHeight = Math.floor(divElement.getBoundingClientRect().height);
         // console.log(`Высота div: ${this.cardHeight}px`);
         this.startProgressBar()
+        this.joinRoom(this.roomId);
         this.$socket.on('update_room', this.handleUpdateRoom);
     },
 
@@ -292,10 +292,17 @@ export default {
 
             this.playerNames = data[1].player_names;
             this.playerStatuses = data[1].player_statuses;
-            this.joinRoom(this.roomId);
+            // this.joinRoom(this.roomId);
 
         } else if (response.status === 204) {
             this.$router.push('/404');  
+        } else if (response.status === 206) {
+            this.updateTablesHall();
+            this.leaveRoom(this.roomId);                
+            localStorage.removeItem('user_active_table');
+            this.$router.replace(`/tables`);            
+            this.$store.commit('incrementStatusHeader');
+            this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
         }
 
         })
@@ -347,9 +354,6 @@ export default {
             console.log('HANDLE UPDATE ROOM User = ', userBack)
             if (userBack != this.thisUserID) {                
                 this.getTable();
-                console.log('HANDLE UPDATE ROOM UPDATE SCREEN')
-            } else {
-                console.log('HANDLE UPDATE ROOM SCREEN NOT UPDATED')
             }
         },
 
@@ -415,6 +419,18 @@ export default {
                     console.error('Error logout user:', error);
                 })
         },
+        readyForNewGame() {
+            console.log('Player is ready for new game');
+            const data = {table_id: this.table.id, user_id: this.thisUserID}
+            axios.post(this.baseUrl + '/API/ready_for_new_game', data)
+                    .then(response => {
+                        console.log('/API/ready_for_new_game', response);
+                        this.$socket.emit('update_room', { room_id: this.roomId, user_id: 0 });
+                    })
+                    .catch(error => {
+                    console.error('/API/ready_for_new_game Error:', error);
+                })
+        },
         startProgressBar() {
             this.timer = setInterval(() => {             
                 // Рассчитываем, сколько времени прошло с момента lastdeal до текущего момента
@@ -429,27 +445,23 @@ export default {
                 // Если прошло достаточно времени, останавливаем интервал и вызываем defaultAction()
                 if (elapsed >= this.table.interval) {
                     console.log('CLEAR INTERVAL and DEFAULT ACTION');
-                    // this.defaultAction();
+                    this.defaultAction();
                     clearInterval(this.timer);                                                   
                 }
             }, 1000); // Обновление каждую секунду
         },
 
         defaultAction() {
-            const data = {table_id: this.table.id, game_id: this.game.id, user_id: this.thisUserID, current_speaker: this.game.speaker_id}
+            const data = {table_id: this.table.id, game_id: this.game.id, user_id: this.thisUserID}
             console.log('TRY TO DEFAULT ACTION')
-            if (this.game.stage == 4) {
-                this.dropPoorCardDefault()
-            } else {
-                axios.post(this.baseUrl + '/API/new_speaker', data)
-                    .then(response => {
-                        console.log('New Speaker recieve from server', response.data.message);
-                        this.startProgressBar();
-                    })
-                    .catch(error => {
-                    console.error('Error logout user:', error);
-                })
-            }
+            axios.post(this.baseUrl + '/API/default_action', data)
+            .then(response => {
+                console.log('DEFAULT ACTION server response: ', response.data.message);
+                    this.startProgressBar();
+            })
+            .catch(error => {
+                console.error('Error logout user:', error);
+            })
         },
 
         dropPoorCardDefault() {
@@ -634,12 +646,11 @@ export default {
             console.log('DROPPED');
             alert('You are have not enough funds for playing!');
             this.updateTablesHall();
-            this.leaveRoom(this.roomId);
+            this.leaveRoom(this.roomId);                
             localStorage.removeItem('user_active_table');
             this.$router.replace(`/tables`);
             this.$store.commit('incrementStatusHeader');
             this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
-
         },
         testWindow() {
             //this.$refs.CustomAlert.openAlert('Заголовок', 'Сообщение пользователю');
@@ -715,7 +726,7 @@ export default {
                 } 
             } catch (error) {   
                 console.log('CARD INVALID DROPPED:');
-            }            
+            }
         },
 
         countZeros(playerIndex) {
@@ -727,6 +738,28 @@ export default {
             // Считаем количество нулей в этом фрагменте
             const zeroCount = playerCards.filter(card => card === 0).length;
             return zeroCount;
+        },
+
+        calculateMargin(arrayIndex,index) {
+            let margin = 0;
+            for (let i = 0; i < index; i++) {
+                if ( arrayIndex == 1) {
+                    if (this.game.card_place1[i] !== 0) {
+                        margin += 15;
+                    }
+                }
+                if (arrayIndex == 2) {
+                    if (this.game.card_place2[i] !== 0) {
+                        margin += 15;
+                    }
+                }
+                if (arrayIndex == 3) {
+                    if (this.game.card_place3[i] !== 0) {
+                        margin += 15;
+                    }
+                }
+            }
+            return `${margin}px`;
         }
 
     },
@@ -738,7 +771,8 @@ export default {
         currentPlayerStatus() {
             console.log('Computed GAME STATUS ', this.playerGameStatus)
             if (this.playerGameStatus == 1) {
-            this.dropThisPlayer();
+                console.error('CURRENT PLAYERS STATUS IS 1')
+            // this.dropThisPlayer();
             }
         // Мы возвращаем пустое значение, потому что computed свойства должны что-то возвращать
         return this.playerGameStatus;
@@ -830,11 +864,14 @@ export default {
                             </div>
                             <!-- Верхний ряд 4/4 из 3 -  строка прогресса времени соперников -->
                             <div class="row align-items-end, main" style="height: 10%; grid; place-items: center;">
-                                <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">
-                                    <div v-if="(((game.speaker_id == rival) && !((game.stage == 4) || (game.stage == 9))) || (game.stage == 4) || (game.stage == 11) || ((game.stage == 9) && (game.status[game.players.indexOf(rival)] == 12))) && ((game.status[game.players.indexOf(rival)] !== 1) && game.status[game.players.indexOf(rival)] !== 10)">
-                                    <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="progressValue" aria-valuemin="0" aria-valuemax="100">
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated" :style="{ width: progressWidth }">{{ this.table.interval - progressElapsed }}</div>
-                                    </div>
+                                <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">                                    
+                                    <div v-if="(((game.speaker_id == rival) && !((game.stage == 4) || (game.stage == 9) || (game.stage == 11))) || (game.stage == 4) || ((game.stage == 9) && (game.status[game.players.indexOf(rival)] == 12))) && 
+                                                ((game.status[game.players.indexOf(rival)] !== 1) && (game.status[game.players.indexOf(rival)] !== 10)) || 
+                                                ((game.stage == 11) && !(game.status[game.players.indexOf(rival)] == 15 || game.status[game.players.indexOf(rival)] == 16)) || 
+                                                ((game.stage == 0) && !(game.status[game.players.indexOf(rival)] == 1 || game.status[game.players.indexOf(rival)] == 2 || game.status[game.players.indexOf(rival)] == 15 || game.status[game.players.indexOf(rival)] == 16))">
+                                        <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="progressValue" aria-valuemin="0" aria-valuemax="100">                                            
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated" :style="{ width: progressWidth }">{{ this.table.interval - progressElapsed }}</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -845,12 +882,7 @@ export default {
                     <!--    Центарльный ряд 3 из 4 -->
                     <div class="row align-items-center, main" style="height: 57%">
                     <!-- Игровой стол  -->
-                    <!--
-                        <div class="container rounded-5 my-1" style="place-items: center; background: darkgreen; heigth: 100%; border: solid 2px Maroon; margin-left: 12px"
-                            @dragenter.prevent="playerPos === game.speaker ? dragEnter : null"
-                            @dragover.prevent="playerPos === game.speaker ? dragOver : null"
-                            @drop="playerPos === game.speaker ? drop : null">
-                        -->
+
                         <div class="container rounded-5 my-1" style="place-items: center; background: darkgreen; heigth: 100%; border: solid 2px Maroon; margin-left: 12px" @dragenter.prevent="dragEnter" @dragover.prevent="dragOver" @drop="dropCard">
                             <div class="row" style="height: 100%">
                                 <!--    1 колонка центрального ряда - кон -->
@@ -879,30 +911,21 @@ export default {
                                     <!--Взятки соперника-->
                                     <div class="row" style="height: 25%">
                                         <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">
-                                            <div class="row" >
+                                            <div class="row" >                                                
                                                 <div v-if="(game.players.indexOf(rival) == game.turn1win - 1)" class="col-1">                                         
-                                                    <img v-if="game.card_place1[0] != 0" class="my-1" :src="cardImagePath[game.card_place1[0]]" style="height: 15vh; margin-left: 0px; position: absolute;">
-                                                    <img v-if="game.card_place1[1] != 0" class="my-1" :src="cardImagePath[game.card_place1[1]]" style="height: 15vh; margin-left: 15px; position: absolute;">
-                                                    <img v-if="game.card_place1[2] != 0" class="my-1" :src="cardImagePath[game.card_place1[2]]" style="height: 15vh; margin-left: 30px; position: absolute;">
-                                                    <img v-if="game.card_place1[3] != 0" class="my-1" :src="cardImagePath[game.card_place1[3]]" style="height: 15vh; margin-left: 45px; position: absolute;">
-                                                    <img v-if="game.card_place1[4] != 0" class="my-1" :src="cardImagePath[game.card_place1[4]]" style="height: 15vh; margin-left: 60px; position: absolute;">
-                                                    <img v-if="game.card_place1[5] != 0" class="my-1" :src="cardImagePath[game.card_place1[5]]" style="height: 15vh; margin-left: 75px; position: absolute;">
+                                                    <template v-for="(card, index) in game.card_place1">
+                                                        <img v-if="card !== 0" :key="index" class="my-1" :src="cardImagePath[card]" :style="{ height: '15vh', marginLeft: calculateMargin(1,index), position: 'absolute' }">
+                                                    </template>
                                                 </div>
-                                                <div v-if="(game.players.indexOf(rival) == game.turn2win - 1)" class="col-1" style="margin-top: 35px">
-                                                    <img v-if="game.card_place2[0] != 0" class="my-1" :src="cardImagePath[game.card_place2[0]]" style="height: 15vh; margin-left: 0px; margin-top: 20px; position: absolute;">
-                                                    <img v-if="game.card_place2[1] != 0" class="my-1" :src="cardImagePath[game.card_place2[1]]" style="height: 15vh; margin-left: 15px; margin-top: 20px; position: absolute;">
-                                                    <img v-if="game.card_place2[2] != 0" class="my-1" :src="cardImagePath[game.card_place2[2]]" style="height: 15vh; margin-left: 30px; margin-top: 20px; position: absolute;">
-                                                    <img v-if="game.card_place2[3] != 0" class="my-1" :src="cardImagePath[game.card_place2[3]]" style="height: 15vh; margin-left: 45px; margin-top: 20px; position: absolute;">
-                                                    <img v-if="game.card_place2[4] != 0" class="my-1" :src="cardImagePath[game.card_place2[4]]" style="height: 15vh; margin-left: 60px; margin-top: 20px; position: absolute;">
-                                                    <img v-if="game.card_place2[5] != 0" class="my-1" :src="cardImagePath[game.card_place2[5]]" style="height: 15vh; margin-left: 75px; margin-top: 20px; position: absolute;">
+                                                <div v-if="(game.players.indexOf(rival) == game.turn2win - 1)" class="col-1" style="margin-top: 35px">                                                    
+                                                    <template v-for="(card, index) in game.card_place2">
+                                                        <img v-if="card !== 0" :key="index" class="my-1" :src="cardImagePath[card]" :style="{ height: '15vh', marginLeft: calculateMargin(2,index), position: 'absolute' }">
+                                                    </template>
                                                 </div>
                                                 <div v-if="(game.players.indexOf(rival) == game.turn3win - 1)" class="col-1" style="margin-top: 70px">
-                                                    <img v-if="game.card_place3[0] != 0" class="my-1" :src="cardImagePath[game.card_place3[0]]" style="height: 15vh; margin-left: 0px; margin-top: 40px; position: absolute;">
-                                                    <img v-if="game.card_place3[1] != 0" class="my-1" :src="cardImagePath[game.card_place3[1]]" style="height: 15vh; margin-left: 15px; margin-top: 40px; position: absolute;">
-                                                    <img v-if="game.card_place3[2] != 0" class="my-1" :src="cardImagePath[game.card_place3[2]]" style="height: 15vh; margin-left: 30px; margin-top: 40px; position: absolute;">
-                                                    <img v-if="game.card_place3[3] != 0" class="my-1" :src="cardImagePath[game.card_place3[3]]" style="height: 15vh; margin-left: 45px; margin-top: 40px; position: absolute;">
-                                                    <img v-if="game.card_place3[4] != 0" class="my-1" :src="cardImagePath[game.card_place3[4]]" style="height: 15vh; margin-left: 60px; margin-top: 40px; position: absolute;">
-                                                    <img v-if="game.card_place3[5] != 0" class="my-1" :src="cardImagePath[game.card_place3[5]]" style="height: 15vh; margin-left: 75px; margin-top: 40px; position: absolute;">
+                                                    <template v-for="(card, index) in game.card_place3">
+                                                        <img v-if="card !== 0" :key="index" class="my-1" :src="cardImagePath[card]" :style="{ height: '15vh', marginLeft: calculateMargin(3,index), position: 'absolute' }">
+                                                    </template>
                                                 </div>
                                                 <div class="col-9">
                                                 </div>
@@ -942,34 +965,24 @@ export default {
                                     <!--Взятки пользователя-->
                                     <div class="row" style="height: 25%">
                                         <div v-if="playerPos == game.turn1win" class="col-2" style="position: relative;">
-                                            <img v-if="game.card_place1[0] != 0" class="my-1" :src="cardImagePath[game.card_place1[0]]" style="height: 15vh; margin-left: 15px; position: absolute; bottom: 0; left: 0">
-                                            <img v-if="game.card_place1[1] != 0" class="my-1" :src="cardImagePath[game.card_place1[1]]" style="height: 15vh; margin-left: 30px; position: absolute; bottom: 0; left: 0">
-                                            <img v-if="game.card_place1[2] != 0" class="my-1" :src="cardImagePath[game.card_place1[2]]" style="height: 15vh; margin-left: 45px; position: absolute; bottom: 0; left: 0">
-                                            <img v-if="game.card_place1[3] != 0" class="my-1" :src="cardImagePath[game.card_place1[3]]" style="height: 15vh; margin-left: 60px; position: absolute; bottom: 0; left: 0">
-                                            <img v-if="game.card_place1[4] != 0" class="my-1" :src="cardImagePath[game.card_place1[4]]" style="height: 15vh; margin-left: 75px; position: absolute; bottom: 0; left: 0">
-                                            <img v-if="game.card_place1[5] != 0" class="my-1" :src="cardImagePath[game.card_place1[5]]" style="height: 15vh; margin-left: 90px; position: absolute; bottom: 0; left: 0">                                            
+                                            <template v-for="(card, index) in game.card_place1">
+                                                <img v-if="card !== 0" :key="index" class="my-1" :src="cardImagePath[card]" :style="{ height: '15vh', marginLeft: calculateMargin(1,index), position: 'absolute',bottom: 0, left: 0}">
+                                            </template>
                                         </div>
                                         <div v-if="playerPos == game.turn2win" class="col-2" style="position: relative;">
-                                            <img v-if="game.card_place2[0] != 0" class="my-1" :src="cardImagePath[game.card_place2[0]]" style="height: 15vh; margin-left: 15px; position: absolute; bottom: 0; left: 0">
-                                            <img v-if="game.card_place2[1] != 0" class="my-1" :src="cardImagePath[game.card_place2[1]]" style="height: 15vh; margin-left: 30px; position: absolute; bottom: 0; left: 0">
-                                            <img v-if="game.card_place2[2] != 0" class="my-1" :src="cardImagePath[game.card_place2[2]]" style="height: 15vh; margin-left: 45px; position: absolute; bottom: 0; left: 0">
-                                            <img v-if="game.card_place2[3] != 0" class="my-1" :src="cardImagePath[game.card_place2[3]]" style="height: 15vh; margin-left: 60px; position: absolute; bottom: 0; left: 0">
-                                            <img v-if="game.card_place2[4] != 0" class="my-1" :src="cardImagePath[game.card_place2[4]]" style="height: 15vh; margin-left: 75px; position: absolute; bottom: 0; left: 0">
-                                            <img v-if="game.card_place2[5] != 0" class="my-1" :src="cardImagePath[game.card_place2[5]]" style="height: 15vh; margin-left: 90px; position: absolute; bottom: 0; left: 0">                                    
+                                            <template v-for="(card, index) in game.card_place2">
+                                                <img v-if="card !== 0" :key="index" class="my-1" :src="cardImagePath[card]" :style="{ height: '15vh', marginLeft: calculateMargin(2,index), position: 'absolute', bottom: 0, left: 0}">
+                                            </template>
                                         </div>
                                         <div v-if="playerPos == game.turn3win" class="col-2" style="position: relative;">
-                                            <img v-if="game.card_place3[0] != 0" class="my-1" :src="cardImagePath[game.card_place3[0]]" style="height: 15vh; margin-left: 15px; position: absolute; bottom: 0; left: 0">
-                                            <img v-if="game.card_place3[1] != 0" class="my-1" :src="cardImagePath[game.card_place3[1]]" style="height: 15vh; margin-left: 30px; position: absolute; bottom: 0; left: 0">
-                                            <img v-if="game.card_place3[2] != 0" class="my-1" :src="cardImagePath[game.card_place3[2]]" style="height: 15vh; margin-left: 45px; position: absolute; bottom: 0; left: 0">
-                                            <img v-if="game.card_place3[3] != 0" class="my-1" :src="cardImagePath[game.card_place3[3]]" style="height: 15vh; margin-left: 60px; position: absolute; bottom: 0; left: 0">
-                                            <img v-if="game.card_place3[4] != 0" class="my-1" :src="cardImagePath[game.card_place3[4]]" style="height: 15vh; margin-left: 75px; position: absolute; bottom: 0; left: 0">
-                                            <img v-if="game.card_place3[5] != 0" class="my-1" :src="cardImagePath[game.card_place3[5]]" style="height: 15vh; margin-left: 90px; position: absolute; bottom: 0; left: 0">
+                                            <template v-for="(card, index) in game.card_place3">
+                                                <img v-if="card !== 0" :key="index" class="my-1" :src="cardImagePath[card]" :style="{ height: '15vh', marginLeft: calculateMargin(3,index), position: 'absolute', bottom: 0, left: 0}">
+                                            </template>
                                         </div>
-                                        <div class="col-6 d-flex align-items-center justify-content-center">
-                                        
+
+                                        <div class="col-6 d-flex align-items-center justify-content-center">                                        
                                         <!--  Тестовый прогрессбар -->
                                         {{ game.status[playerPos - 1] }}
-
                                         </div>
                                     </div>
                                 </div>
@@ -1073,7 +1086,11 @@ export default {
                                 <div class="container" style="height: 100%; width: 100%;">
                                     <!-- 1/3 строка 3 колонки нижнего ряда - прогресс бар времени пользователя                     -->
                                     <div class="row align-items-center justify-content-center" style="height: 20%;">
-                                        <div v-if="((game.speaker_id == this.thisUserID) && !((game.stage == 9) && (game.status[playerPos - 1] == 11))) || (game.stage == 4) || (game.stage == 11) || ((game.stage == 9) && (game.status[playerPos - 1] == 12))" class="justify-content-center" style="width: 80%">
+                                        <div v-if="((game.speaker_id == this.thisUserID) && !((game.stage == 9) && (game.status[playerPos - 1] == 11)) && !(game.stage == 11)) || 
+                                            (game.stage == 4) && !(game.status[playerPos - 1] == 6) || 
+                                            (game.stage == 11) && (rivalsQuantity > 0) && !(game.status[playerPos - 1] == 15 || game.status[playerPos - 1] == 16) || 
+                                            ((game.stage == 9) && (game.status[playerPos - 1] == 12)) ||
+                                            ((game.stage == 0) && (rivalsQuantity > 0)) && !(game.status[playerPos - 1] == 1 || game.status[playerPos - 1] == 2 || game.status[playerPos - 1] == 15 || game.status[playerPos - 1] == 16)" class="justify-content-center" style="width: 80%">
                                             <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="progressValue" aria-valuemin="0" aria-valuemax="100">
                                                 <div class="progress-bar progress-bar-striped progress-bar-animated" :style="{ width: progressWidth }">{{ this.table.interval - progressElapsed }}</div>
                                             </div>
@@ -1142,9 +1159,11 @@ export default {
                                             </div>                                            
                                         </div>
 
-                                        <div v-if="(game.stage == 11)" class="container" style="height: 100%; width: 100%;">
+                                        <div v-if="((game.stage == 11 && rivalsQuantity > 0) || (game.stage == 0 && rivalsQuantity > 0)) && 
+                                            !(game.status[playerPos - 1] == 1 || game.status[playerPos - 1] == 2 || game.status[playerPos - 1] == 15 || game.status[playerPos - 1] == 16)" 
+                                            class="container" style="height: 100%; width: 100%;">
                                             <div v-if="this.playerBalance >= game.min_bet" class="btn-group dropup flex-grow-1 w-100" style="height: 50%; display: grid; place-items: center;">
-                                                <button type="button" @click="startNewGame" class="btn btn-primary flex-grow-1 m-1 w-100">Join new game</button>
+                                                <button type="button" @click="readyForNewGame" class="btn btn-primary flex-grow-1 m-1 w-100">Start new game</button>
                                             </div>
                                             <div class="btn-group dropup flex-grow-1 w-100" style="height: 50%; display: grid; place-items: center;" >
                                                 <button type="button" @click="leaveTable" class="btn btn-danger flex-grow-1 m-1 w-100">Leave table</button>
@@ -1176,7 +1195,12 @@ export default {
                                 </div>
                             </div>
                             <div class="col-4 d-flex justify-content-center align-items-center">
-                                <div v-if="(game.status[playerPos-1] == 0) || (game.status[playerPos-1] == 1) || (game.status[playerPos-1] == 10) || (game.status[playerPos-1] == 12) || (game.status[playerPos-1] == 14)" class="d-flex flex-grow-1" style="width: 100%; bsckground: #666">
+                                <div v-if="(game.status[playerPos-1] == 0) || 
+                                    (game.status[playerPos-1] == 1) || 
+                                    (game.status[playerPos-1] == 10) || 
+                                    (game.status[playerPos-1] == 12) || 
+                                    (game.status[playerPos-1] == 14) ||
+                                    (game.stage == 11)" class="d-flex flex-grow-1" style="width: 100%; bsckground: #666">
                                     <button @click="leaveTable" class="btn btn-danger flex-grow-1 w-100">Leave Table</button>
                                 </div>
                             </div>

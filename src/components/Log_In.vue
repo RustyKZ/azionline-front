@@ -1,18 +1,19 @@
 <template>
   <div class="content">
     <div class="mainbox">
-        <div class="container">
-          <h2>Login</h2>
-          <hr>
-          <form @submit.prevent="loginUser">
-            <label for="email">E-mail:</label>
-            <input class="full" type="email" id="email" v-model="user.email" required><br><br>
-
-            <label for="password">Password:</label>
-            <input class="full" type="password" id="password" v-model="user.password" required><br><br>
-
-            <button type="submit">Login</button>
+        <div class="container my-5">
+          <div class="bg-body-tertiary p-5 rounded">
+            <h2>Login</h2>
+            <hr>
+              <form @submit.prevent="loginUser">
+              <label for="email">E-mail:</label>
+              <input class="full" type="email" id="email" v-model="user.email" required><br><br>
+              <label for="password">Password:</label>
+              <input class="full" type="password" id="password" v-model="user.password" required><br>
+              <hr>
+              <button type="submit" class="btn btn-dark">Login</button>
           </form>
+        </div>
         </div>
     </div>
   </div>

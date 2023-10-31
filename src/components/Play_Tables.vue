@@ -35,7 +35,14 @@
                 tableKyes: {},
                 isAuth: false,
                 isWeb3Auth: false,
-                playerActiveTable: 0
+                playerActiveTable: 0,
+                hideEmpty: false,
+                hideFree: false,
+                hideGold: false,
+                hide36: false,
+                hide27: false,
+                sortBy: '', // Поле для текущей сортировки
+                sortDesc: false, // Флаг для определения порядка сортировки
             };
         },
         created() {
@@ -111,20 +118,7 @@
                     console.error('Ошибка при получении данных:', error);
                 });
             },
-            /*joinTable(tableId) {
-                console.log('Join to table ', tableId);
-                this.joinData.user_id = this.thisUserID;
-                this.joinData.table_id = tableId;
-                this.joinData.table_password = '';
-                axios.post(`${this.baseUrl}/API/join_table`,this.joinData)
-                .then(response => {
-                    this.$router.replace(`/table/${tableId}`);
-                    console.log(response)
-                })
-                .catch(error => {
-                    console.error(`Join table ${tableId} error `, error);
-                });
-            },*/
+
             stringToArray(str) {
                 // Разбиваем строку на массив, используя запятую как разделитель
                 return str.split(',').map(item => parseInt(item.trim()));
@@ -147,20 +141,47 @@
                     tableDict['tablekey_' + table.id] = table.players_now;
                 }
             return tableDict;
-            }
+            },
+            createTable() {
+                this.$router.push('/create_table');
+            },
 
+            sortTables(field) {
+                console.log('SORT TABLES BY', this.sortDesc, this.sortBy)
+                if (field === this.sortBy) {
+                    this.sortDesc = !this.sortDesc; // Если выбран тот же столбец, меняем порядок
+                } else {
+                    this.sortBy = field; // Иначе устанавливаем новое поле для сортировки
+                    this.sortDesc = false; // Сбрасываем порядок в возрастающий
+                }
+            },
         },
+        
         computed: {
             ...mapGetters(['isLogin', 'isWeb3Login']),
-        // Функция для вычисления ключа для компонента
-        tableKey() {
-            return (tableId) => {
-                // Здесь вы можете выполнить дополнительную обработку tableId, если это необходимо
-                return `tablekey_${tableId}`
-            };
-            
+            // Функция для вычисления ключа для компонента
+            tableKey() {
+                return (tableId) => {
+                    // Здесь вы можете выполнить дополнительную обработку tableId, если это необходимо
+                    return `tablekey_${tableId}`
+                };
+            },
+
+            sortedTables() {
+                return this.tables.slice().sort((a, b) => {
+                    const aVal = a[this.sortBy];
+                    const bVal = b[this.sortBy];
+                    if (aVal > bVal) {
+                        return this.sortDesc ? -1 : 1;
+                    }
+                    if (aVal < bVal) {
+                        return this.sortDesc ? 1 : -1;
+                    }
+                    return 0;
+                });
+            },
         },
-    },
+
     }
 </script>
 
@@ -168,11 +189,11 @@
     <div class="mainbox">
         <div class="container">
             <div class="row">
-                <!--Левая панель со столами-->
+                <!--Левая панель со столами-->              
                 <div class="col-9">
                     <div class="container mt-3">
-                        <div>
-                            <div v-for="(table) in tables" :key="table.id" class="alert alert-info" style="background: Honeydew; border: solid 1px green; margin-top: 10px">
+                        <div v-for="(table) in sortedTables" :key="table.id">
+                            <div v-if="!((hideEmpty && table.players_now == 0) || (hideFree && table.cointype == 0) || (hideGold && table.cointype == 1) || (hide36 && table.drop_suit == 0) || (hide27 && table.drop_suit != 0))" class="alert alert-info" style="background: Honeydew; border: solid 1px green; margin-top: 10px">
                                 <TableCard
                                     :key = "tableKey(table.id)"
                                     :table="table"
@@ -195,22 +216,22 @@
                             </div>
                             <div class="my-2 d-flex justify-content-center" style="width: 100%;">
                                 <div class="d-flex justify-content-center" style="width: 80%;">
-                                    <input type="submit" class="btn btn-success flex-grow-1" value="Table #ID">
+                                    <input @click="sortTables('id')" type="submit" class="btn btn-success flex-grow-1" value="Table #ID">
                                 </div>
                             </div>
                             <div class="my-2 d-flex justify-content-center" style="width: 100%;">
                                 <div class="d-flex justify-content-center" style="width: 80%;">
-                                    <input type="submit" class="btn btn-success flex-grow-1" value="Minimal bet">
+                                    <input @click="sortTables('min_bet')" type="submit" class="btn btn-success flex-grow-1" value="Minimal bet">
                                 </div>
                             </div>
                             <div class="my-2 d-flex justify-content-center" style="width: 100%;">
                                 <div class="d-flex justify-content-center" style="width: 80%;">
-                                    <input type="submit" class="btn btn-success flex-grow-1" value="Max players">
+                                    <input @click="sortTables('max_players')" type="submit" class="btn btn-success flex-grow-1" value="Max players">
                                 </div>
                             </div>
                             <div class="my-2 d-flex justify-content-center" style="width: 100%;">
                                 <div class="d-flex justify-content-center" style="width: 80%;">
-                                    <input type="submit" class="btn btn-success flex-grow-1" value="Players now">
+                                    <input @click="sortTables('players_now')" type="submit" class="btn btn-success flex-grow-1" value="Players now">
                                 </div>
                             </div>
                             <hr style="color: green">
@@ -221,8 +242,7 @@
                                     </div>
                                     <div class="col-3 d-flex justify-content-end" style="">
                                         <div class="form-check d-flex justify-content-end">
-                                            <input class="form-check-input" type="checkbox" value="" id="cb_hide_empty"
-                                                style="border-color: green">
+                                            <input class="form-check-input" type="checkbox" value="" id="cb_hide_empty" v-model="hideEmpty" style="border-color: green">
                                         </div>
                                     </div>
                                 </div>
@@ -234,8 +254,7 @@
                                     </div>
                                     <div class="col-3 d-flex justify-content-end" style="">
                                         <div class="form-check d-flex justify-content-end">
-                                            <input class="form-check-input" type="checkbox" value="" id="cb_hide_free"
-                                                style="border-color: green">
+                                            <input class="form-check-input" type="checkbox" value="" id="cb_hide_free" v-model="hideFree" style="border-color: green">
                                         </div>
                                     </div>
                                 </div>
@@ -247,8 +266,7 @@
                                     </div>
                                     <div class="col-3 d-flex justify-content-end" style="">
                                         <div class="form-check d-flex justify-content-end">
-                                            <input class="form-check-input" type="checkbox" value="" id="cb_hide_gold"
-                                                style="border-color: green">
+                                            <input class="form-check-input" type="checkbox" value="" id="cb_hide_gold" v-model="hideGold" style="border-color: green">
                                         </div>
                                     </div>
                                 </div>
@@ -260,8 +278,7 @@
                                     </div>
                                     <div class="col-3 d-flex justify-content-end" style="">
                                         <div class="form-check d-flex justify-content-end">
-                                            <input class="form-check-input" type="checkbox" value="" id="cb_hide_36cards"
-                                                style="border-color: green">
+                                            <input class="form-check-input" type="checkbox" value="" id="cb_hide_36cards" v-model="hide36" style="border-color: green">
                                         </div>
                                     </div>
                                 </div>
@@ -273,8 +290,7 @@
                                     </div>
                                     <div class="col-3 d-flex justify-content-end" style="">
                                         <div class="form-check d-flex justify-content-end">
-                                            <input class="form-check-input" type="checkbox" value="" id="cb_hide_27cards"
-                                                style="border-color: green">
+                                            <input class="form-check-input" type="checkbox" value="" id="cb_hide_27cards" v-model="hide27" style="border-color: green">
                                         </div>
                                     </div>
                                 </div>
@@ -282,7 +298,7 @@
                             <hr style="color: green">
                             <div class="my-2 mb-3 d-flex justify-content-center" style="width: 100%;">
                                 <div class="d-flex justify-content-center" style="width: 80%;">
-                                    <input type="submit" class="btn btn-success flex-grow-1" value="Create table">
+                                    <input @click="createTable" type="submit" class="btn btn-success flex-grow-1" value="Create table">
                                 </div>
                             </div>
                         </div>

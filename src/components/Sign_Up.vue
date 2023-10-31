@@ -1,24 +1,27 @@
 <template>
   <div class="content">
     <div class="mainbox">
-        <div class="container">
+        <div class="container my-3">
+          <div class="bg-body-tertiary p-5 rounded">
           <h2>Registration Form</h2>
           <hr>
           <form @submit.prevent="registerUser">
             <label for="name">Name:</label>
-            <input class="full" type="text" id="name" v-model="user.name" required><br><br>
+            <input class="full" type="text" id="name" v-model="user.name" required><br>
 
-            <label for="email">E-mail:</label>
-            <input class="full" type="email" id="email" v-model="user.email" required><br><br>
+            <label for="email" class="mt-2">E-mail:</label>
+            <input class="full" type="email" id="email" v-model="user.email" required><br>
 
-            <label for="password">Password:</label>
-            <input class="full" type="password" id="password" v-model="user.password" required><br><br>
+            <label for="password" class="mt-2">Password:</label>
+            <input class="full" type="password" id="password" v-model="user.password" required><br>
 
-            <label for="confirmPassword">Reenter Password:</label>
-            <input class="full" type="password" id="confirmPassword" v-model="confirmPassword" required><br><br>
+            <label for="confirmPassword" class="mt-2">Reenter Password:</label>
+            <input class="full" type="password" id="confirmPassword" v-model="confirmPassword" required><br>
+            <hr>
 
-            <button type="submit">Register</button>
+            <button type="submit" class="btn btn-dark">Register</button>
           </form>
+        </div>
         </div>
     </div>
   </div>
