@@ -42,7 +42,7 @@
                 hide36: false,
                 hide27: false,
                 sortBy: '', // Поле для текущей сортировки
-                sortDesc: false, // Флаг для определения порядка сортировки
+                sortDesc: false, // Флаг для определения порядка сортировки                
             };
         },
         created() {
@@ -55,14 +55,20 @@
             this.isWeb3Auth = checkWeb3();
             await this.getTables();
             console.log('LOGIN ', this.isAuth,'WEB3', this.isWeb3Auth);
-            if (this.isAuth == false && this.isWeb3Auth == false) {
-                this.$router.push('/access_denied');
-            }                        
-            this.$socket.on('update_tables', this.handleUpdateTables) 
-            console.log('ACTIVE TABLE IS ', this.playerActiveTable)
+            if (!this.isAuth) {
+                this.setIsLogin(false)
+            }
+            if (!this.isWeb3Auth) {
+                this.setIsWeb3Login(false)
+            }
+
+            this.$socket.on('update_tables', this.handleUpdateTables);
+            this.joinRoom(this.roomId);
+            console.log('ACTIVE TABLE IS ', this.playerActiveTable);
+            console.log('VUEX IsAuth: ', this.isAuthenticated,' isLogin :', this.isLogin, ' isWeb3Login:', this.isWeb3Login)
         },
         methods: {
-            ...mapMutations(['setIsLogin', 'setIsWeb3Login']),
+            ...mapMutations(['setIsLogin', 'setIsWeb3Login', 'isAuthenticated']),
             async checkAuthorization() {
                 try {
                     this.isAuth = await checkAuth(this.baseUrl); // Проверяйте авторизацию
@@ -111,8 +117,7 @@
                     this.playerMatrix = response.data.player_matrix;
                     this.tableKeys = this.updateTablesDict(this.tables);
                     this.playerActiveTable = response.data.player_active_table;
-                    console.log('AXIOS GET TABLES - AT is ', this.playerActiveTable);
-                    this.joinRoom(this.roomId);
+                    console.log('AXIOS GET TABLES - AT is ', this.playerActiveTable);                    
                 })
                 .catch(error => {
                     console.error('Ошибка при получении данных:', error);
@@ -156,9 +161,9 @@
                 }
             },
         },
-        
+
         computed: {
-            ...mapGetters(['isLogin', 'isWeb3Login']),
+            ...mapGetters(['isLogin', 'isWeb3Login', 'isAuthenticated']),
             // Функция для вычисления ключа для компонента
             tableKey() {
                 return (tableId) => {

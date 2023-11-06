@@ -182,10 +182,11 @@ export default {
         this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
         const divElement = this.$refs.userCardDiv;
         this.cardHeight = Math.floor(divElement.getBoundingClientRect().height);
-        // console.log(`Высота div: ${this.cardHeight}px`);
-        this.startProgressBar()
+        // console.log(`Высота div: ${this.cardHeight}px`);        
+        // this.startProgressBar()
         this.joinRoom(this.roomId);
         this.$socket.on('update_room', this.handleUpdateRoom);
+        this.startProgressBar()
     },
 
     methods: {
@@ -294,15 +295,10 @@ export default {
             this.playerStatuses = data[1].player_statuses;
             // this.joinRoom(this.roomId);
 
-        } else if (response.status === 204) {
+        } else if (response.status === 204 && this.game.status[this.playerPos-1] != 1) {
             this.$router.push('/404');  
         } else if (response.status === 206) {
-            this.updateTablesHall();
-            this.leaveRoom(this.roomId);                
-            localStorage.removeItem('user_active_table');
-            this.$router.replace(`/tables`);            
-            this.$store.commit('incrementStatusHeader');
-            this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
+            this.dropThisPlayer();
         }
 
         })
@@ -316,6 +312,7 @@ export default {
             this.leaveData.table_id = this.tableId;
             axios.post(`${this.baseUrl}/API/leave_table`,this.leaveData)
             .then(response => {
+                clearInterval(this.timer);
                 this.updateTablesHall();
                 this.leaveRoom(this.roomId);                
                 localStorage.removeItem('user_active_table');
@@ -446,7 +443,7 @@ export default {
                 if (elapsed >= this.table.interval) {
                     console.log('CLEAR INTERVAL and DEFAULT ACTION');
                     this.defaultAction();
-                    clearInterval(this.timer);                                                   
+                    // clearInterval(this.timer);
                 }
             }, 1000); // Обновление каждую секунду
         },
@@ -456,8 +453,19 @@ export default {
             console.log('TRY TO DEFAULT ACTION')
             axios.post(this.baseUrl + '/API/default_action', data)
             .then(response => {
-                console.log('DEFAULT ACTION server response: ', response.data.message);
-                    this.startProgressBar();
+                if (response === 200) {
+                    console.log('DEFAULT ACTION server response: ', response);
+                    // this.getTable()
+                    // this.startProgressBar();
+                } else if (response === 206) {
+                    console.log('DROPPED');                    
+                    // this.startProgressBar();
+                    this.leaveRoom(this.roomId);                
+                    localStorage.removeItem('user_active_table');
+                    this.$router.replace(`/tables`);
+                    this.$store.commit('incrementStatusHeader');
+                    this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
+                }
             })
             .catch(error => {
                 console.error('Error logout user:', error);
@@ -643,14 +651,13 @@ export default {
         },
 
         dropThisPlayer() {
+            clearInterval(this.timer);
             console.log('DROPPED');
-            alert('You are have not enough funds for playing!');
-            this.updateTablesHall();
-            this.leaveRoom(this.roomId);                
+            this.leaveRoom(this.roomId);
+            alert('You are have not enough funds for playing!');                        
             localStorage.removeItem('user_active_table');
             this.$router.replace(`/tables`);
             this.$store.commit('incrementStatusHeader');
-            this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
         },
         testWindow() {
             //this.$refs.CustomAlert.openAlert('Заголовок', 'Сообщение пользователю');
@@ -760,19 +767,27 @@ export default {
                 }
             }
             return `${margin}px`;
-        }
+        },
+        
+        goToPlayerProfile(player_id) {
+            clearInterval(this.timer);
+            this.updateTablesHall();
+            this.leaveRoom(this.roomId);                
+            localStorage.removeItem('user_active_table');                
+            this.$store.commit('incrementStatusHeader');            
+            this.$router.push(`/profile/${player_id}`);
+        },
 
-    },
+    },    
 
     computed: {
         isRivalsQuantityEven() {
             return this.rivalsQuantity % 2 === 0;
         },
-        currentPlayerStatus() {
-            console.log('Computed GAME STATUS ', this.playerGameStatus)
-            if (this.playerGameStatus == 1) {
+        currentPlayerStatus() {            
+            if (this.playerGameStatus == 1 && (this.game.stage == 0 || this.game.stage == 11)) {
                 console.error('CURRENT PLAYERS STATUS IS 1')
-            // this.dropThisPlayer();
+            this.dropThisPlayer();
             }
         // Мы возвращаем пустое значение, потому что computed свойства должны что-то возвращать
         return this.playerGameStatus;
@@ -800,13 +815,13 @@ export default {
                             <div class="row align-items-center, main" style="height: 15%;">
                                 <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">
                                     <div class="align-items-center">
-                                        <div v-if="game.speaker_id == rival" class="main rounded-3" style=" background: blue; text-align: center; vertical-align: middle">
+                                        <div v-if="game.speaker_id == rival" @click="goToPlayerProfile(rival)" class="main rounded-3" style="background: blue; cursor: pointer; text-align: center; vertical-align: middle">
                                             <b style="color: aliceblue;">{{ rival }} - </b>
-                                            <a :href="'/profile/' + rival" class="text-decoration-none" style="color: white"><b> {{ truncatedNicknameText(playerNames[rival]) }}</b></a>
+                                            <b style="color: white"> {{ truncatedNicknameText(playerNames[rival]) }}</b>
                                         </div>
-                                        <div v-else class="main rounded-3" :style="{ background: statusColor[playerStatuses[rival]] }" style="text-align: center; vertical-align: middle">
+                                        <div v-else @click="goToPlayerProfile(rival)" class="main rounded-3" :style="{ background: statusColor[playerStatuses[rival]] }" style="cursor: pointer; text-align: center; vertical-align: middle">
                                             <b style="color: aliceblue;">{{ rival }} - </b>
-                                            <a :href="'/profile/' + rival" class="text-decoration-none" style="color: white"><b> {{ truncatedNicknameText(playerNames[rival]) }}</b></a>
+                                            <b style="color: white"> {{ truncatedNicknameText(playerNames[rival]) }}</b>
                                         </div>
 
                                     </div>
@@ -1218,6 +1233,7 @@ export default {
                                 <div v-if="table.cointype == 0" class="d-flex justify-content-between align-items-center"> <h6>Coin type:</h6> <h6 class="text-end"><b>Freecoin</b></h6> </div>
                                 <div v-if="table.cointype == 1" class="d-flex justify-content-between align-items-center"> <h6>Coin type:</h6> <h6 class="text-end"><b>Goldcoin</b></h6> </div>
                                 <div class="d-flex justify-content-between align-items-center"> <h6>Dropped:</h6> <h6 class="text-end"><b>{{ droppedSuit[table.drop_suit] }}</b></h6> </div>
+                                <div v-if="table.table_password != ''" class="d-flex justify-content-between align-items-center"> <h6>Password:</h6> <h6 class="text-end"><b>{{ table.table_password }}</b></h6> </div>
 
                             </div>
                             
@@ -1233,7 +1249,7 @@ export default {
 
                         <hr style="color: green">
 
-                        <!-- Никнейм игрока  -->
+                        <!-- Никнейм игрока  
 
                         <div v-if="this.game.speaker_id == this.thisUserID" class="d-flex justify-content-between align-items-center rounded-3 my-1" style="background: blue">
                             <h5 class="ms-2 mt-1 align-self-center text-white" style="color: aliceblue;"><b>{{ playerNames[this.thisUserID] }} - {{ currentPlayerStatus }}</b></h5>                            
@@ -1243,6 +1259,7 @@ export default {
                         </div>
                         
                         <hr style="color: green">
+                        -->
                         
                         <!-- Никнеймы соперников  -->
                         <div class="container">

@@ -24,7 +24,7 @@ const router = createRouter({
     { path: '/404', component: Not_Found },
     { path: '/create_table', component: Create_Table, meta: { requiresAuth: true } },
 
-    { path: '/tables', component: Play_Tables, name: 'TablesPage' },
+    { path: '/tables', component: Play_Tables, name: 'TablesPage', meta: { requiresAuth: true } },
     { path: '/profile/:user_id', component: PlayerProfile, name: 'ProfilePage' },
     { path: '/table/:table_id', component: Playing_Table, name: 'PlayingTablePage' },
    ],

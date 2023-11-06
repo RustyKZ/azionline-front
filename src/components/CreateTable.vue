@@ -1,5 +1,6 @@
 <script>
 import axios from 'axios';
+
 export default {
     name: 'Create_Table',
     data() {
@@ -33,7 +34,8 @@ export default {
         this.createTable.user_id = Number(localStorage.getItem('user_id'));
     },
     mounted() {      
-        this.get404()          
+        this.get404()
+
     },
     methods: {
         goToHomePage() {

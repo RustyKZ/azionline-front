@@ -31,6 +31,7 @@
 import axios from 'axios';
 import { login } from './auth.js';
 import { checkAuth } from './auth.js';
+import { mapMutations } from 'vuex';
 
 export default {
   name: 'Sign_Up',
@@ -50,6 +51,7 @@ export default {
             };
           },
   methods: {
+    ...mapMutations(['setIsLogin']),
     async registerUser() {
       if (this.user.password !== this.confirmPassword) {
         alert('Passwords do not match!');
@@ -59,24 +61,36 @@ export default {
       try {
         const response = await axios.post(this.baseUrl + '/API/adduser', this.user);
         console.log('Server /API/adduser says: ', response)
-      } catch (error) {
-      console.error('Error register:', error);
-        throw error;
-      }
+        this.user_login.email = this.user.email;
+        this.user_login.password = this.user.password;
 
-      this.user_login.email = this.user.email;
-      this.user_login.password = this.user.password;
-
-      try {
-        const accessToken = await login(this.baseUrl, this.user_login);
-        console.log('Login: ', accessToken);
-        if (await checkAuth(this.baseUrl)) {
-          this.$store.commit('incrementStatusHeader');
-          this.$router.replace('/');
+        try {
+          const accessToken = await login(this.baseUrl, this.user_login);
+          console.log('Login: ', accessToken);
+          if (await checkAuth(this.baseUrl)) {
+            this.setIsLogin(true);
+            this.$store.commit('incrementStatusHeader');
+            this.$router.replace('/');
+          }
+        } catch (error) {
+          console.error('Server /API/adduser ERROR:', error);
+          // Обработка ошибок аутентификации
         }
       } catch (error) {
-        // Обработка ошибок аутентификации
+        const errorMessage = error.response.data.message;
+        alert(errorMessage);
+        console.error('Server /API/adduser ERROR:', error);
       }
+      
+      /* axios.post(`${this.baseUrl}/API/adduser`, this.User)
+        .then(response => {
+          console.log('Server /API/adduser says: ', response)                  
+        })
+          .catch(error => {
+            console.error('Server /API/adduser ERROR:', error);
+        }); */
+
+      
 
     },
   },

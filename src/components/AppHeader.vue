@@ -6,6 +6,8 @@
     import { checkMetaMaskConnection } from './wallet_connect.js'
     import { walletEmailConnect } from './wallet_connect.js'
     import { mapGetters, mapMutations } from 'vuex';
+    import { checkLogin } from './auth.js';
+    import { checkWeb3 } from './wallet_connect.js'
     // import { checkLogin } from './auth.js';
 
 
@@ -38,6 +40,17 @@
             this.headerUserNickname = localStorage.getItem('current_user_nickname')
             // console.log('Current user: ',this.headerUserNickname,'Users registered: ', this.userList)            
         },
+        async mounted() {
+            this.isAuth = checkLogin();
+            this.isWeb3Auth = checkWeb3();           
+            console.log('LOGIN ', this.isAuth,'WEB3', this.isWeb3Auth);
+            if (!this.isAuth) {
+                this.setIsLogin(false)
+            }
+            if (!this.isWeb3Auth) {
+                this.setIsWeb3Login(false)
+            }
+        },
         methods: {
             ...mapMutations(['setIsLogin', 'setIsWeb3Login']),
             async checkAuthorization() {
@@ -64,7 +77,7 @@
                         // Пользователь авторизован, выполните нужные действия
                         this.userAddress = localStorage.getItem('user_wallet');
                         this.userId = localStorage.getItem('user_id');                        
-                        // this.setIsWeb3Login(true);
+                        this.setIsWeb3Login(true);
                     } else {
                         // Пользователь не авторизован, выполните нужные действия
                         this.isWeb3Auth = false;
@@ -173,14 +186,14 @@
                 }
             },
             goToProfilePage() {
-                this.$router.replace(`/profile/${this.userId}`);
+                this.$router.push(`/profile/${this.userId}`);
             },
             goToTablesPage() {
                 this.$router.push('/tables');
             },
         },
         computed: {
-            ...mapGetters(['isLogin', 'isWeb3Login']),
+            ...mapGetters(['isLogin', 'isWeb3Login', 'isAuthenticated']),
             truncatedNicknameText() {
                 try {
                     // const buttonText = this.userList[this.userId] || '';

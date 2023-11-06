@@ -38,9 +38,12 @@ export default {
     methods: {
         joinTable(tableId) {
             console.log('Join to the table ', this.playerActiveTable);
-            this.joinData.user_id = this.thisUserID;
-            this.joinData.table_id = tableId;
             this.joinData.table_password = '';
+            if (this.table.table_password != '') {
+                this.joinData.table_password = prompt('Please enter the password:');
+            }
+            this.joinData.user_id = this.thisUserID;
+            this.joinData.table_id = tableId;            
             axios.post(`${this.baseUrl}/API/join_table`, this.joinData)
                 .then(response => {
                     if (response.status === 200) {
@@ -59,6 +62,31 @@ export default {
                     alert(errorMessage);
                 });
         },
+
+        returnTable(tableId) {
+            console.log('Join to the table ', this.playerActiveTable);
+            this.joinData.user_id = this.thisUserID;
+            this.joinData.table_id = tableId;            
+            this.joinData.table_password = this.table.table_password;
+            axios.post(`${this.baseUrl}/API/join_table`, this.joinData)
+                .then(response => {
+                    if (response.status === 200) {
+                        // Успешный ответ сервера, перенаправьте пользователя на другую страницу
+                        this.joinRoom(`table-${this.playerActiveTable}`)
+                        this.$router.replace(`/table/${tableId}`);
+                    } else {
+                        // Сервер вернул ошибку, выведите сообщение из ответа
+                        alert(`Server Error: ${response.data.message}`);
+                    }
+                    console.log(response)
+                })
+                .catch(error => {                    
+                    const errorMessage = error.response.data.message;
+                    console.error(`Join table ${tableId} error `, error);
+                    alert(errorMessage);
+                });
+        },
+
 
         leaveTable(tableId) {            
             this.leaveData.user_id = this.thisUserID;
@@ -129,7 +157,7 @@ export default {
 
                 <div class="col-4 d-flex justify-content-center align-items-center">
                     <div class="container">
-                        <h5>Table <b>#{{ table.id }}</b></h5>
+                        <h5 style="display: inline-block; margin-right: 10px;">Table <b>#{{ table.id }}</b></h5><span v-if=" table.table_password != ''"  class="password-protected">🔒<span class="tooltiptext">Password protected</span></span>
                         <div>
                             <h6>Max Players: <b>{{ table.max_players }}</b></h6>
                             <h6>Ante: <b>{{ table.min_bet }}</b></h6>
@@ -183,7 +211,7 @@ export default {
                     </div>
                 -->
                     <div v-if="playerActiveTable == table.id" class="d-flex justify-content-center my-1" style="width: 100%;">
-                        <button @click="joinTable(playerActiveTable)" class="btn btn-outline-success flex-grow-1 w-100">Return</button>
+                        <button @click="returnTable(playerActiveTable)" class="btn btn-outline-success flex-grow-1 w-100">Return</button>
                     </div>
                     <div v-if="playerActiveTable != table.id" class="d-flex justify-content-center my-1" style="width: 100%;">
                         <button @click="joinTable(table.id)" class="btn btn-success flex-grow-1 w-100">Join</button>
@@ -195,4 +223,31 @@ export default {
 </template>
 
 <style scoped>
+.password-protected {
+  cursor: help; /* Изменение курсора при наведении */
+  position: relative; /* Необходимо для позиционирования всплывающего текста */
+}
+
+.password-protected .tooltiptext {
+  visibility: hidden; /* Скрыть текст по умолчанию */
+  background-color: #ffc107;
+  color: #000000;
+  text-align: center;
+  border-radius: 4px;
+  padding: 5px;
+  padding-left: 15px;
+  padding-right: 15px;
+  position: absolute;
+  z-index: 1;
+  bottom: 100%; /* Поместите текст над значком 🔒 */
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s; /* Плавное появление текста */
+}
+
+.password-protected:hover .tooltiptext {
+  visibility: visible; /* Показать текст при наведении */
+  opacity: 1; /* Сделать текст полностью видимым */
+}
 </style>

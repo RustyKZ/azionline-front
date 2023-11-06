@@ -23,6 +23,7 @@
 // import axios from 'axios';
 import { login } from './auth.js';
 import { checkAuth } from './auth.js';
+import { mapMutations } from 'vuex';
 
 export default {
   name: 'Log_In',
@@ -36,6 +37,7 @@ export default {
     };
   },
   methods: {
+    ...mapMutations(['setIsLogin']),
     goToHomePage() {
       this.$router.replace('/');
     },
@@ -44,11 +46,14 @@ export default {
         const accessToken = await login(this.baseUrl, this.user);
         console.log('Login: ', accessToken);
         if (await checkAuth(this.baseUrl)) {
+          this.setIsLogin(true);
           this.$store.commit('incrementStatusHeader');
           this.goToHomePage();
         }
       } catch (error) {
-        // Обработка ошибок аутентификации
+        const errorMessage = error.response.data.message;
+        alert(errorMessage);
+        console.error('Server /API/adduser ERROR:', error);
       }
     },
   },
