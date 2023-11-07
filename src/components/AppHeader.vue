@@ -105,12 +105,17 @@
                 this.$router.push('/login');
             },
             goToGameRules(){
-                this.$store.commit('incrementStatusHeader');
+                this.$router.push('/rules');
+            },
+            goToTopList() {
+                this.$router.push('/toplist');
+            },       
+            goToAbout() {
+                this.$router.push('/about');
             },
             goToActiveTable() {
                 this.$router.push(`/table/${this.userActiveTable}`);
-            }
-            ,
+            },
             goToLogoutPage() {
                 axios.post(this.baseUrl + '/API/logout')
                     .then(response => {
@@ -134,11 +139,7 @@
                     console.error('Error logout user:', error);
                 })
             },
-            webSocketTest() {
-                this.$socket.emit('join_table')
-                console.log('socket emit')
-            },
-
+            
             async walletConnectPage() {
                 if (this.isAuth || this.$store.getters.getIsLogin) {
                     walletEmailConnect()
@@ -233,18 +234,15 @@
         <div class="container">
             <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
 
-                <div class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
-                    <!-- <div>{{ this.$store.getters.getStatusHeader }}</div> -->
-                    <img @click="goToHomePage" class="link_button" src="/images/logo.png" alt="AZI Online">
+                <div class="d-flex align-items-center text-white text-decoration-none">                    
+                    <img @click="goToHomePage" class="link_button mt-1 me-4" src="/images/logo.png" alt="AZI Online">
                 </div>
 
                 <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-                    <li @click="goToTablesPage" class="btn btn-success">Play Now</li>
-                    <li @click="goToGameRules" class="nav-link px-2 text-white link_button">Game Rules</li>
-                    <!-- <li class="nav-link px-2 text-white link_button">Log {{ this.$store.getters.getIsLogin }}</li>
-                    <li class="nav-link px-2 text-white link_button">W3 {{ this.$store.getters.getIsWeb3Login }}</li> -->
-                    <li @click="webSocketTest" class="nav-link px-2 text-white link_button">Top Players</li>
-                    <li class="nav-link px-2 text-white link_button">About Us</li>
+                    <li @click="goToTablesPage" class="btn btn-success me-2">Play Now</li>
+                    <li @click="goToGameRules" class="nav-link px-2 text-white link_button">Game Rules</li>                    
+                    <li @click="goToTopList" class="nav-link px-2 text-white link_button">Top Players</li>
+                    <li @click="goToAbout" class="nav-link px-2 text-white link_button">About</li>
                     <li v-if="isAuth && userId == 3" @click="goToAddPostPage" class="nav-link px-2 text-white link_button">Add Post</li>
                     <li v-if="isAuth && userId == 3" @click="goToDeletePostPage" class="nav-link px-2 text-white link_button">Delete post</li>
                 </ul>
@@ -255,9 +253,9 @@
                     <button type="button" class="btn btn-outline-light me-2" v-if="!isAuth && !isWeb3Auth" @click="goToRegisterPage">Sign-up</button>
                     <button type="button" class="btn btn-outline-light me-2" v-if="!isAuth && !isWeb3Auth" @click="goToLoginPage">Login</button>
                     <button type="button" class="btn btn-outline-light me-2" v-if="isAuth  && !isWeb3Auth" @click="goToLogoutPage">Logout</button>
-                    <button type="button" class="btn btn-outline-warning me-2" v-if="!isWeb3Auth" @click="walletConnectPage">Metamask</button>
-                    <button type="button" class="btn btn-warning me-2" v-if="isWeb3Auth && !isHovered" @mouseover="isHovered = true"> {{ truncatedAddressText }} </button>
-                    <button type="button" class="btn btn-danger me-2" v-if="isWeb3Auth && isHovered" @mouseout="isHovered = false" @click="disconnectPage"> Disconnect Wallet </button>
+                    <button type="button" class="btn btn-outline-warning" v-if="!isWeb3Auth" @click="walletConnectPage">Metamask</button>
+                    <button type="button" class="btn btn-warning" v-if="isWeb3Auth && !isHovered" @mouseover="isHovered = true"> {{ truncatedAddressText }} </button>
+                    <button type="button" class="btn btn-danger" v-if="isWeb3Auth && isHovered" @mouseout="isHovered = false" @click="disconnectPage"> Disconnect Wallet </button>
                 </div>
 
             </div>

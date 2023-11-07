@@ -2,7 +2,7 @@
     import axios from 'axios';
 
     export default {
-        name: 'Main_content',
+        name: 'Top_List',
         data() {
             return {
                 posts: [],

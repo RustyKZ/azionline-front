@@ -16,11 +16,11 @@ app.use(store); // Используйте хранилище Vuex в прило�
 
 
 app.config.globalProperties.serverUrl = 'http://127.0.0.1:8000'
-app.config.globalProperties.tokenContractAddress = '0xa12f829A5feFCbA0390dc71c28C6824401680Aa0'
+app.config.globalProperties.tokenContractAddress = '0xE8544773D7217Ff4Bb6A19636779139460A87ecd'
 app.config.globalProperties.hostWalletAddress = '0x5B4c138eb869Cb2Ad29414912d21E40ecAB4BFbA'
 
 export const serverUrl = 'http://127.0.0.1:8000'
-export const userTokenContract = '0xa12f829A5feFCbA0390dc71c28C6824401680Aa0'
+export const userTokenContract = '0xE8544773D7217Ff4Bb6A19636779139460A87ecd'
 export const hostWalletAddress = '0x5B4c138eb869Cb2Ad29414912d21E40ecAB4BFbA'
 
 app.use(router)

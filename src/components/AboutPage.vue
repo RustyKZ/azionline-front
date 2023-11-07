@@ -2,7 +2,7 @@
     import axios from 'axios';
 
     export default {
-        name: 'Main_content',
+        name: 'About_Page',
         data() {
             return {
                 posts: [],
@@ -10,7 +10,7 @@
             };
         },
         mounted() {        
-        axios.get(`${this.baseUrl}/API/getarticles`)
+        axios.get(`${this.baseUrl}/API/getabout`)
             .then(response => {
             this.posts = response.data;
             console.log(this.posts);
@@ -29,11 +29,11 @@
         <div class="container">
             <!-- Используйте цикл v-for для вывода каждой записи в массиве posts -->
             <div v-for="(post, index) in posts" :key="post.id">
-                <h2>{{ post.title }}</h2>
-                <p><b>{{ post.subtitle }}</b></p>
-                <img :src="baseUrl+'/static/postimage/' + post.image" v-if="post.image" alt="Image" class="img-container">
-                <p v-html="post.text"></p>
-                <p><i>{{ post.publication_date }}</i></p>
+                <h3>{{ post.title }}</h3>
+                <p style="text-align: justify"><b>{{ post.subtitle }}</b></p>
+                <img :src="baseUrl+'/static/postimage/' + post.image" v-if="post.image !=''" alt="Image" class="img-container rounded-3">
+                <p></p>
+                <p v-html="post.text" style="text-align: justify"></p>                
                 <hr v-if="index < posts.length - 1">
             </div>
         </div>

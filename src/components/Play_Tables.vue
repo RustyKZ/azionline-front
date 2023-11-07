@@ -310,10 +310,8 @@
                     </div>
                 </div>
             </div>
-        </div>
-        
+        </div>        
     </div>
-    {{this.tableKeys}}
 </template>
 
 <style scoped>
