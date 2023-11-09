@@ -10,7 +10,7 @@ export async function login(baseUrl, user) {
     localStorage.setItem('access_token', accessToken);
     return accessToken;
   } catch (error) {
-    console.error('Error logging in:', error);
+      alert(error.response.data.message)    
     throw error;
   }
 }

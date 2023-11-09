@@ -50,9 +50,8 @@ export default {
           this.goToHomePage();
         }
       } catch (error) {
-        const errorMessage = error.response.data.message;
-        alert(errorMessage);
-        console.error('Server /API/adduser ERROR:', error);
+        // const errorMessage = error.response.data.message;        
+        console.error('Server ERROR:', error);
       }
     },
   },
