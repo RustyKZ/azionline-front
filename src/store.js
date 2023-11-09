@@ -16,11 +16,11 @@ export default createStore({
     },
     setIsLogin(state, value) {
       state.isLogin = value;
-      console.log('STORE VUEX SET LOGIN ', value)
+      // console.log('STORE VUEX SET LOGIN ', value)
     },
     setIsWeb3Login(state, value) {
       state.isWeb3Login = value;
-      console.log('STORE VUEX SET WEB3 LOGIN ', value)
+      // console.log('STORE VUEX SET WEB3 LOGIN ', value)
     },
     // setActiveTable(state, value) {
     //  state.userActiveTable = value;

@@ -43,7 +43,7 @@
         async mounted() {
             this.isAuth = checkLogin();
             this.isWeb3Auth = checkWeb3();           
-            console.log('LOGIN ', this.isAuth,'WEB3', this.isWeb3Auth);
+            // console.log('LOGIN ', this.isAuth,'WEB3', this.isWeb3Auth);
             if (!this.isAuth) {
                 this.setIsLogin(false)
             }
@@ -59,11 +59,11 @@
                     if (this.isAuth) {
                         // Пользователь авторизован, выполните нужные действия
                         this.userId = Number(localStorage.getItem('user_id'));
-                        console.log('Header checkAuthorization: userId from storage is ', this.UserID)
+                        // console.log('Header checkAuthorization: userId from storage is ', this.UserID)
                     } else {
                         // Пользователь не авторизован, выполните нужные действия
                         this.isAuth = false;
-                        console.log('Header checkAuthorization: User is not authenticated');
+                        // console.log('Header checkAuthorization: User is not authenticated');
                     }
                 } catch (error) {       
                 console.error('Error checking authorization:', error);
@@ -82,7 +82,7 @@
                     } else {
                         // Пользователь не авторизован, выполните нужные действия
                         this.isWeb3Auth = false;
-                        console.log('User is not authenticated with Web3');
+                        // console.log('User is not authenticated with Web3');
                     }
                 } catch (error) {       
                 console.error('Error checking authorization:', error);
@@ -127,14 +127,14 @@
                         localStorage.removeItem('user_active_table');
                         this.setIsLogin(false);
                         this.isAuth = checkAuth(this.baseUrl);
-                        console.log(this.isAuth);
+                        // console.log(this.isAuth);
                         if (this.$route.path === '/') {
                             this.$store.commit('incrementStatusHeader');
                         } else {
                             this.$store.commit('incrementStatusHeader');
                             this.$router.replace('/'); // В противном случае перейти на главную
                         }
-                        console.log(response)
+                        console.log(response.data.message)
                     })
                     .catch(error => {
                     console.error('Error logout user:', error);
@@ -173,7 +173,7 @@
                 }
             },
             disconnectPage() {
-                console.log('disconnecting');
+                // console.log('disconnecting');
                 walletDisconnect();
                 this.setIsWeb3Login(false);
                 if (this.$route.path === '/') {

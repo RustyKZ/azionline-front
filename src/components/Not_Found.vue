@@ -26,7 +26,7 @@ export default {
             const request404 = {
                 user_id: this.thisUserID,            
             }
-            console.log('GET 404 | AXIOS:', request404)
+            // console.log('GET 404 | AXIOS:', request404)
             axios.post(`${this.baseUrl}/API/get_404`, request404)
             .then(response=> {
                 this.userNickname = response.data[1].user_nickname;

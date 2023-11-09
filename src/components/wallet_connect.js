@@ -33,14 +33,14 @@ export async function walletConnect() {
                     userAddress, // адрес для подписи
                     '' // пароль кошелька (может быть пустым, если кошелек разблокирован)
                 );
-                console.log('Signed:', dataToSign)
+                // console.log('Signed:', dataToSign)
                 const dataToSend = {
                     userAddress: userAddress,
                     tokenBalance: balance.toString(),
                     signature: signature,
                 };
-                console.log(dataToSend);
-                console.log(serverUrl + '/API/wallet_connect', dataToSend)
+                //console.log(dataToSend);
+                //console.log(serverUrl + '/API/wallet_connect', dataToSend)
                 axios.post(serverUrl + '/API/wallet_connect', dataToSend)
                     .then(function (response) {
                         // Обработка успешного ответа сервера
@@ -68,7 +68,7 @@ export async function walletConnect() {
 }
 
 export async function walletDisconnect() {
-    console.log('Wallet disconnect function')
+    //console.log('Wallet disconnect function')
     try {
         if (typeof window.ethereum !== 'undefined') {
             // Проверяем доступность объекта ethereum
@@ -94,11 +94,11 @@ export async function checkMetaMaskConnection() {
     if (window.ethereum) {
         const web3 = new Web3(window.ethereum);
         try {
-            console.log('start Web3 checking');
-            const wallet = localStorage.getItem('user_wallet');
-            console.log('Local storage:', wallet)
+            //console.log('start Web3 checking');
+            // const wallet = localStorage.getItem('user_wallet');
+            //console.log('Local storage:', wallet)
             if (!localStorage.getItem('user_wallet')) {
-                console.log('Local storage is empty');
+                //console.log('Local storage is empty');
                 // В ЛС нет адреса кошелька
                 return false;
             }
@@ -107,7 +107,7 @@ export async function checkMetaMaskConnection() {
             // Получаем адрес кошелька, подключенного к MetaMask
             const accounts = await web3.eth.getAccounts();
             if (accounts.length === 0) {
-                console.log('Wallet is not connect');
+                //console.log('Wallet is not connect');
                 // Кошелек не подключен
                 return false;
             }
@@ -127,11 +127,11 @@ export async function checkMetaMaskConnection() {
             }
             // Все проверки успешны, кошелек подключен и адрес верен
             const userdata = { userWallet: connectedAddress };
-            console.log('ServerUrl is ', serverUrl, ' Responso is ', userdata);
+            //console.log('ServerUrl is ', serverUrl, ' Responso is ', userdata);
             const response = await axios.post(serverUrl + '/API/check_web3_auth', userdata);
-            console.log('CHECK MM Connection', response.data)
-            const isWeb3auth = response.data.web3auth;
-            console.log('Server says: Web3auth is ', isWeb3auth)
+            //console.log('CHECK MM Connection', response.data)
+            // const isWeb3auth = response.data.web3auth;
+            //console.log('Server says: Web3auth is ', isWeb3auth)
             // После получения current_user_id от сервера
             const userId = response.data.user_id;
             // Сохраните его в локальном хранилище (localStorage)
@@ -196,7 +196,7 @@ export async function walletEmailConnect() {
                     userAddress, // адрес для подписи
                     '' // пароль кошелька (может быть пустым, если кошелек разблокирован)
                 );
-                console.log('Signed:', dataToSign)
+                //console.log('Signed:', dataToSign)
                 const accessToken = localStorage.getItem('access_token');
                 const userId = localStorage.getItem('user_id');
                 const dataToSend = {
@@ -205,8 +205,8 @@ export async function walletEmailConnect() {
                     tokenBalance: balance.toString(),
                     signature: signature,
                 };
-                console.log(dataToSend);
-                console.log(serverUrl + '/API/wallet_email_connect', dataToSend)
+                //console.log(dataToSend);
+                //console.log(serverUrl + '/API/wallet_email_connect', dataToSend)
                 axios.post(serverUrl + '/API/wallet_email_connect', dataToSend, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
@@ -216,8 +216,8 @@ export async function walletEmailConnect() {
                         // Обработка успешного ответа сервера
                         console.log('Server response:', response.data.message);
                         localStorage.setItem('user_wallet', userAddress);
-                        const isConnect = checkMetaMaskConnection();
-                        console.log('Wallet connected: ', isConnect)
+                        // const isConnect = checkMetaMaskConnection();
+                        // console.log('Wallet connected: ', isConnect)
                     })
                     .catch(function (error) {
                         // Обработка ошибки

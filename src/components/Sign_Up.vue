@@ -60,13 +60,13 @@ export default {
 
       try {
         const response = await axios.post(this.baseUrl + '/API/adduser', this.user);
-        console.log('Server /API/adduser says: ', response)
+        console.log('Server says: ', response.data.message)
         this.user_login.email = this.user.email;
         this.user_login.password = this.user.password;
 
         try {
-          const accessToken = await login(this.baseUrl, this.user_login);
-          console.log('Login: ', accessToken);
+          await login(this.baseUrl, this.user_login);
+          // console.log('Login: ', accessToken);
           if (await checkAuth(this.baseUrl)) {
             this.setIsLogin(true);
             this.$store.commit('incrementStatusHeader');

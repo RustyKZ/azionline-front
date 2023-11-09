@@ -54,7 +54,7 @@
             this.isAuth = checkLogin();
             this.isWeb3Auth = checkWeb3();
             await this.getTables();
-            console.log('LOGIN ', this.isAuth,'WEB3', this.isWeb3Auth);
+            // console.log('LOGIN ', this.isAuth,'WEB3', this.isWeb3Auth);
             if (!this.isAuth) {
                 this.setIsLogin(false)
             }
@@ -64,15 +64,15 @@
 
             this.$socket.on('update_tables', this.handleUpdateTables);
             this.joinRoom(this.roomId);
-            console.log('ACTIVE TABLE IS ', this.playerActiveTable);
-            console.log('VUEX IsAuth: ', this.isAuthenticated,' isLogin :', this.isLogin, ' isWeb3Login:', this.isWeb3Login)
+            // console.log('ACTIVE TABLE IS ', this.playerActiveTable);
+            // console.log('VUEX IsAuth: ', this.isAuthenticated,' isLogin :', this.isLogin, ' isWeb3Login:', this.isWeb3Login)
         },
         methods: {
             ...mapMutations(['setIsLogin', 'setIsWeb3Login', 'isAuthenticated']),
             async checkAuthorization() {
                 try {
                     this.isAuth = await checkAuth(this.baseUrl); // Проверяйте авторизацию
-                    console.log('CHECK AUTH', this.isAuth)
+                    // console.log('CHECK AUTH', this.isAuth)
                     if (this.isAuth) {
                         // Пользователь авторизован, выполните нужные действия
                         this.userId = localStorage.getItem('user_id');
@@ -80,7 +80,7 @@
                     } else {
                         // Пользователь не авторизован, выполните нужные действия
                         this.isAuth = false;
-                        console.log('User is not authenticated');            
+                        // console.log('User is not authenticated');            
                     }
                 } catch (error) {       
                 console.error('Error checking authorization:', error);
@@ -99,7 +99,7 @@
                     } else {
                         // Пользователь не авторизован, выполните нужные действия
                         this.isWeb3Auth = false;
-                        console.log('User is not authenticated with Web3');
+                        // console.log('User is not authenticated with Web3');
                     }
                 } catch (error) {       
                 console.error('Error checking authorization:', error);
@@ -117,7 +117,7 @@
                     this.playerMatrix = response.data.player_matrix;
                     this.tableKeys = this.updateTablesDict(this.tables);
                     this.playerActiveTable = response.data.player_active_table;
-                    console.log('AXIOS GET TABLES - AT is ', this.playerActiveTable);                    
+                    // console.log('AXIOS GET TABLES - AT is ', this.playerActiveTable);                    
                 })
                 .catch(error => {
                     console.error('Ошибка при получении данных:', error);
@@ -132,11 +132,11 @@
             joinRoom(roomId) {
                 // Вызываем событие 'join_room' и передаем данные с идентификатором комнаты
                 this.$socket.emit('join_room', { room_id: roomId, user_id: this.thisUserID });
-                console.log(`User ${this.thisUserID} joined to room ${roomId}`)
+                // console.log(`User ${this.thisUserID} joined to room ${roomId}`)
             },
             handleUpdateTables() {
                 this.getTables();
-                console.log('Received new data about tables from server');
+                // console.log('Received new data about tables from server');
 
                 // Далее вы можете выполнять необходимые действия при получении события
             },
@@ -152,7 +152,7 @@
             },
 
             sortTables(field) {
-                console.log('SORT TABLES BY', this.sortDesc, this.sortBy)
+                // console.log('SORT TABLES BY', this.sortDesc, this.sortBy)
                 if (field === this.sortBy) {
                     this.sortDesc = !this.sortDesc; // Если выбран тот же столбец, меняем порядок
                 } else {

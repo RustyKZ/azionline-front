@@ -13,14 +13,14 @@ export async function tokenTransfer(tokenQuantityDec) {
     const tokenQuantity = tokenQuantityDec.toString() + '000000000000000000';
     // console.log('tokenTransfer function started', tokenQuantity)
     if (typeof window.ethereum !== 'undefined') {
-        console.log(' typeof window.ethereum !== undefined - DONE');
+        //console.log(' typeof window.ethereum !== undefined - DONE');
         const web3 = new Web3(window.ethereum);
 
         try {
             // Запрос разрешения на доступ к кошельку пользователя
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             const userAddress = accounts[0];
-            console.log(' window.ethereum.request - DONE')
+            //console.log(' window.ethereum.request - DONE')
             // Адрес контракта пользовательского токена
             const contractAddress = userTokenContract;
 
@@ -28,10 +28,10 @@ export async function tokenTransfer(tokenQuantityDec) {
 
             // Создаем экземпляр контракта токена
             const contract = new web3.eth.Contract(tokenABI, contractAddress);
-            console.log(' contract = new web3.eth.Contract - DONE')
+            //console.log(' contract = new web3.eth.Contract - DONE')
             // Подготовка данных для транзакции
             const data = contract.methods.transfer(hostWalletAddress, tokenQuantity).encodeABI();
-            console.log(' contract.methods.transfer - DONE')
+            //console.log(' contract.methods.transfer - DONE')
             // Отправка транзакции через MetaMask
             await web3.eth.sendTransaction({
                 from: userAddress,

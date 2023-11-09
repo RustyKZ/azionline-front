@@ -40,7 +40,7 @@ export default {
     axios.get(`${this.baseUrl}/API/getarticles`)
       .then(response => {
         this.posts = response.data;
-        console.log(this.posts);
+        // console.log(this.posts);
       })
       .catch(error => {
         console.error('Ошибка при получении данных:', error);
@@ -60,9 +60,9 @@ export default {
     },
     async checkAuthAndRedirect() {
       this.isAuth = await checkAuth(this.baseUrl);
-      console.log('Add post is auth - ', this.isAuth);
+      // console.log('Add post is auth - ', this.isAuth);
       if (this.isAuth === false) {
-        console.log('Add post IF INSIDE');
+        // console.log('Add post IF INSIDE');
         this.$router.replace('/access_denied');
       }
     }

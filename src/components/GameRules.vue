@@ -12,8 +12,7 @@
         mounted() {        
         axios.get(`${this.baseUrl}/API/getrules`)
             .then(response => {
-            this.posts = response.data;
-            console.log(this.posts);
+            this.posts = response.data;            
             })
             .catch(error => {
             console.error('Ошибка при получении данных:', error);

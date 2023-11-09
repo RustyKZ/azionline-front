@@ -13,7 +13,6 @@
         axios.get(`${this.baseUrl}/API/getarticles`)
             .then(response => {
             this.posts = response.data;
-            console.log(this.posts);
             })
             .catch(error => {
             console.error('Ошибка при получении данных:', error);

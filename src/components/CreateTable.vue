@@ -54,11 +54,11 @@ export default {
             
             this.createTable.interval = Number(this.interval);
             this.createTable.password = this.password;
-            console.log('CREATE TABLE', this.createTable);
+            // console.log('CREATE TABLE', this.createTable);
             axios.post(`${this.baseUrl}/API/create_table`, this.createTable)
             .then(response=> {
                 const tableId = response.data[1].table_id
-                console.log('SUCCESSFUL',response);
+                // console.log('SUCCESSFUL',response);
                 this.$router.replace(`/table/${tableId}`);
             })
             .catch(error => {
@@ -71,7 +71,7 @@ export default {
             const request404 = {
                 user_id: this.thisUserID,            
             }
-            console.log('GET 404 | AXIOS:', request404)
+            // console.log('GET 404 | AXIOS:', request404)
             axios.post(`${this.baseUrl}/API/get_404`, request404)
             .then(response=> {
                 this.userNickname = response.data[1].user_nickname;

@@ -43,8 +43,7 @@ export default {
     },
     async loginUser() {
       try {
-        const accessToken = await login(this.baseUrl, this.user);
-        console.log('Login: ', accessToken);
+        await login(this.baseUrl, this.user);      
         if (await checkAuth(this.baseUrl)) {
           this.setIsLogin(true);
           this.$store.commit('incrementStatusHeader');

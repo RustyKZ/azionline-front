@@ -40,9 +40,9 @@ export default {
   methods: {
     async checkAuthAndRedirect() {
       this.isWeb3Auth = await checkMetaMaskConnection();
-      console.log('Add post is auth - ', this.isWeb3Auth);
+      // console.log('Add post is auth - ', this.isWeb3Auth);
       if (this.isAuth === false) {
-        console.log('Add post IF INSIDE');
+        // console.log('Add post IF INSIDE');
         this.$router.replace('/access_denied');
       }
     }
@@ -50,7 +50,7 @@ export default {
   async mounted() {
     await this.checkAuthAndRedirect();
     this.userId = Number(localStorage.getItem('user_id'));
-    console.log('ADD POST ', this.userId);
+    // console.log('ADD POST ', this.userId);
     if (this.userId !=32) {        
         this.$router.replace('/access_denied');
       }

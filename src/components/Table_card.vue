@@ -33,11 +33,11 @@ export default {
     },
     created() {
         this.thisUserID = Number(localStorage.getItem('user_id'));        
-        console.log('TABLE CARD: User table', this.playerActiveTable, this.tableId);
+        // console.log('TABLE CARD: User table', this.playerActiveTable, this.tableId);
     },
     methods: {
         joinTable(tableId) {
-            console.log('Join to the table ', this.playerActiveTable);
+            //console.log('Join to the table ', this.playerActiveTable);
             this.joinData.table_password = '';
             if (this.table.table_password != '') {
                 this.joinData.table_password = prompt('Please enter the password:');
@@ -54,7 +54,7 @@ export default {
                         // Сервер вернул ошибку, выведите сообщение из ответа
                         alert(`Server Error: ${response.data.message}`);
                     }
-                    console.log(response)
+                    // console.log(response)
                 })
                 .catch(error => {                    
                     const errorMessage = error.response.data.message;
@@ -64,7 +64,7 @@ export default {
         },
 
         returnTable(tableId) {
-            console.log('Join to the table ', this.playerActiveTable);
+            //console.log('Join to the table ', this.playerActiveTable);
             this.joinData.user_id = this.thisUserID;
             this.joinData.table_id = tableId;            
             this.joinData.table_password = this.table.table_password;
@@ -78,7 +78,7 @@ export default {
                         // Сервер вернул ошибку, выведите сообщение из ответа
                         alert(`Server Error: ${response.data.message}`);
                     }
-                    console.log(response)
+                    //console.log(response)
                 })
                 .catch(error => {                    
                     const errorMessage = error.response.data.message;
@@ -95,10 +95,10 @@ export default {
             .then(response => {      
                 this.updateTablesHall();
                 this.leaveRoom(this.roomId);                
-                console.log('METHOD leaveTable: ', response)
+                console.log('LeaveTable: ', response.data.message)
                 this.$store.commit('incrementStatusHeader');
                 this.activeTable = 0;
-                console.log('TABLE CARD: User active table = ', this.activeTable)
+                //console.log('TABLE CARD: User active table = ', this.activeTable)
 
             })
             .catch(error => {
@@ -112,15 +112,15 @@ export default {
         joinRoom(roomId) {
             // Вызываем событие 'join_room' и передаем данные с идентификатором комнаты
             this.$socket.emit('join_room', { room_id: roomId, user_id: this.thisUserID });
-            console.log(`User ${this.thisUserID} joined to room ${roomId}`)
+            //console.log(`User ${this.thisUserID} joined to room ${roomId}`)
         },
         leaveRoom(roomId) {
             // Вызываем событие 'join_room' и передаем данные с идентификатором комнаты
             this.$socket.emit('leave_room', { room_id: roomId, user_id: this.thisUserID });
-            console.log(`User ${this.thisUserID} left room ${roomId}`)
+            //console.log(`User ${this.thisUserID} left room ${roomId}`)
         },
         updateTablesHall() {
-            console.log('UpdateTableHall activated');
+            //console.log('UpdateTableHall activated');
             this.$socket.emit('update_tables_hall');
             
         },

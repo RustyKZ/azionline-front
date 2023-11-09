@@ -27,7 +27,7 @@ export default {
         this.userId = this.$route.params.user_id;
         this.thisUserID = Number(localStorage.getItem('user_id'));
         this.user.user_id = this.thisUserID = Number(localStorage.getItem('user_id'));
-        console.log(this.user)
+        // console.log(this.user)
     },
     methods: {
         startEditing() {
@@ -50,11 +50,11 @@ export default {
                 new_name: this.newName,
                 editor_id: this.thisUserID
             };
-            console.log(dataToSend)
+            // console.log(dataToSend)
             axios.post(`${this.baseUrl}/API/change_name`, dataToSend)
                 .then(response => {
                     const data = response.data; // Получаем данные с сервера
-                    console.log(data);
+                    console.log(data.message);
                     this.userInfo.nickname = this.newName;
                     localStorage.setItem('current_user_nickname', this.newName);
                     this.$store.commit('incrementStatusHeader');
@@ -67,7 +67,7 @@ export default {
 
         async requestToken(value) {
             this.refilling = false;
-            console.log('Refilling ', value)
+            // console.log('Refilling ', value)
             if (Number.isInteger(value) && value > 0) {
                 try {
                     await tokenTransfer(value);
@@ -76,7 +76,7 @@ export default {
                 } catch (error) {
                     const errorMessage = error.response.data.message;
                     alert(errorMessage);
-                    console.log('Token transfer failed');
+                    // console.log('Token transfer failed');
                 }
             } else {
                 alert('Incorrect tokens value')
@@ -96,11 +96,11 @@ export default {
                 user_id: this.thisUserID,
                 gold: value,
             }
-            console.log(dataToSend)
+            // console.log(dataToSend)
             axios.post(`${this.baseUrl}/API/add_goldcoin`, dataToSend)
             .then(response => {
                 const data = response.data; // Получаем данные с сервера
-                console.log(data)                
+                console.log(data.message)                
             })
             .catch(error => {
                 console.error('Ошибка при получении данных:', error);
@@ -129,7 +129,7 @@ export default {
                         wallet: data[1].wallet,
                     };
                     this.userNewInfo.nickname = data[1].nickname
-                    console.log(this.userInfo);
+                    // console.log(this.userInfo);
                 }
             })
             .catch(error => {

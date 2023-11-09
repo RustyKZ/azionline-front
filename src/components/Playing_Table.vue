@@ -163,7 +163,7 @@ export default {
         this.thisUserID = Number(localStorage.getItem('user_id'));
         this.tableId = Number(this.$route.params.table_id);
         this.roomId = 'table-'+ this.$route.params.table_id;
-        console.log('tableID = ', this.tableId, 'userID = ', this.thisUserID, ' Room ID = ', this.roomId)
+        // console.log('tableID = ', this.tableId, 'userID = ', this.thisUserID, ' Room ID = ', this.roomId)
     },
 
     async mounted() {
@@ -175,7 +175,7 @@ export default {
         this.tableRequest.user_id = this.thisUserID;
         this.tableRequest.table_id = Number(this.$route.params.table_id);
         this.tableRequest.table_password = '';
-        console.log('PLAYING TABLE GET TABLE :',this.tableRequest)
+        // console.log('PLAYING TABLE GET TABLE :',this.tableRequest)
         await this.getTable()        
         this.$store.commit('incrementStatusHeader');        
         this.updateTablesHall();
@@ -196,7 +196,7 @@ export default {
                 table_id: Number(this.$route.params.table_id),
                 table_password: ''
             }
-            console.log('PLAYING TABLE GET_TABLE | AXIOS:', requestT)
+            // console.log('PLAYING TABLE GET_TABLE | AXIOS:', requestT)
             axios.post(`${this.baseUrl}/API/get_table`, requestT)
         .then(response => {
             if (response.status === 200) {
@@ -317,7 +317,7 @@ export default {
                 this.leaveRoom(this.roomId);                
                 localStorage.removeItem('user_active_table');
                 this.$router.replace(`/tables`);
-                console.log('METHOD leaveTable: ', response)
+                console.log('METHOD leaveTable: ', response.data.message)
                 this.$store.commit('incrementStatusHeader');
                 this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
             })
@@ -332,12 +332,12 @@ export default {
         joinRoom(roomId) {
             // Вызываем событие 'join_room' и передаем данные с идентификатором комнаты
             this.$socket.emit('join_room', { room_id: roomId, user_id: this.thisUserID });
-            console.log(`User ${this.thisUserID} joined to room ${roomId}`)
+            // console.log(`User ${this.thisUserID} joined to room ${roomId}`)
         },
         leaveRoom(roomId) {
             // Вызываем событие 'join_room' и передаем данные с идентификатором комнаты
             this.$socket.emit('leave_room', { room_id: roomId, user_id: this.thisUserID });
-            console.log(`User ${this.thisUserID} left room ${roomId}`)
+            // console.log(`User ${this.thisUserID} left room ${roomId}`)
         },
         updateTablesHall() {
             this.$socket.emit('update_tables_hall');            
@@ -348,7 +348,7 @@ export default {
             if (data && data.user_id) {
                 userBack = data.user_id;
             }
-            console.log('HANDLE UPDATE ROOM User = ', userBack)
+            // console.log('HANDLE UPDATE ROOM User = ', userBack)
             if (userBack != this.thisUserID) {                
                 this.getTable();
             }
@@ -402,26 +402,26 @@ export default {
                     break
                 }            
             }
-            console.log('', this.table.players)
+            // console.log('', this.table.players)
             return plPos;
         },
         startNewGame() {
-            console.log('New game button pressed');
+            // console.log('New game button pressed');
             const data = {table_id: this.table.id}
             axios.post(this.baseUrl + '/API/new_game', data)
                     .then(response => {
-                        console.log('New game started', response);                
+                        console.log('New game started', response.data.message);                
                     })
                     .catch(error => {
                     console.error('Error logout user:', error);
                 })
         },
         readyForNewGame() {
-            console.log('Player is ready for new game');
+            // console.log('Player is ready for new game');
             const data = {table_id: this.table.id, user_id: this.thisUserID}
             axios.post(this.baseUrl + '/API/ready_for_new_game', data)
                     .then(response => {
-                        console.log('/API/ready_for_new_game', response);
+                        console.log('/API/ready_for_new_game', response.data.message);
                         this.$socket.emit('update_room', { room_id: this.roomId, user_id: 0 });
                     })
                     .catch(error => {
@@ -441,7 +441,7 @@ export default {
                 this.progressWidth = `${this.progressValue}%`;
                 // Если прошло достаточно времени, останавливаем интервал и вызываем defaultAction()
                 if (elapsed >= this.table.interval) {
-                    console.log('CLEAR INTERVAL and DEFAULT ACTION');
+                    // console.log('CLEAR INTERVAL and DEFAULT ACTION');
                     this.defaultAction();
                     // clearInterval(this.timer);
                 }
@@ -450,15 +450,15 @@ export default {
 
         defaultAction() {
             const data = {table_id: this.table.id, game_id: this.game.id, user_id: this.thisUserID}
-            console.log('TRY TO DEFAULT ACTION')
+            // console.log('TRY TO DEFAULT ACTION')
             axios.post(this.baseUrl + '/API/default_action', data)
             .then(response => {
                 if (response === 200) {
-                    console.log('DEFAULT ACTION server response: ', response);
+                    // console.log('DEFAULT ACTION server response: ', response);
                     // this.getTable()
                     // this.startProgressBar();
                 } else if (response === 206) {
-                    console.log('DROPPED');                    
+                    // console.log('DROPPED');                    
                     // this.startProgressBar();
                     this.leaveRoom(this.roomId);                
                     localStorage.removeItem('user_active_table');
@@ -473,7 +473,7 @@ export default {
         },
 
         dropPoorCardDefault() {
-            console.log('DROP DEFAULT CARD !!!')
+            // console.log('DROP DEFAULT CARD !!!')
         },
 
         bettingRaise(bet) {
@@ -482,7 +482,7 @@ export default {
             const full_bet = call_bet + raise_bet;
             if (full_bet > this.playerBalance) {
                 alert('You don’t have enough to bet on')
-                console.log('BETTING BET: TOO POOR FOR BETTING');    
+                // console.log('BETTING BET: TOO POOR FOR BETTING');    
             } else {
                 const playerRaise = {
                     user_id: this.thisUserID,
@@ -491,7 +491,7 @@ export default {
                 }
                 axios.post(`${this.baseUrl}/API/raising`, playerRaise)
                     .then(response => {
-                        console.log('BETTING CALL: PLAYER CALLS ', response);
+                        console.log('BETTING CALL: PLAYER CALLS ', response.data.message);
                         this.getTable();
                         this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
                     })
@@ -504,7 +504,7 @@ export default {
         bettingBet(bet) {
             if (bet * this.table.min_bet > this.playerBalance) {
                 alert('You don’t have enough to bet on')
-                console.log('BETTING BET: TOO POOR FOR BETTING');    
+                // console.log('BETTING BET: TOO POOR FOR BETTING');    
             } else {
                 const playerBet = {
                     user_id: this.thisUserID,
@@ -513,7 +513,7 @@ export default {
                 }
                 axios.post(`${this.baseUrl}/API/betting`, playerBet)
                     .then(response => {
-                        console.log('BETTING BET: PLAYER BETS ', response);
+                        console.log('BETTING BET: PLAYER BETS ', response.data.message);
                         this.getTable();
                         this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
                     })
@@ -527,7 +527,7 @@ export default {
             const bet = Math.max(...this.game.players_bet) - this.game.players_bet[this.playerPos - 1];
             if (bet > this.playerBalance) {
                 alert('You don’t have enough to bet on')
-                console.log('BETTING BET: TOO POOR FOR BETTING');    
+                // console.log('BETTING BET: TOO POOR FOR BETTING');    
             } else {
                 const playerCall = {
                     user_id: this.thisUserID,
@@ -536,7 +536,7 @@ export default {
                 }
                 axios.post(`${this.baseUrl}/API/calling`, playerCall)
                     .then(response => {
-                        console.log('BETTING CALL: PLAYER CALLS ', response);
+                        console.log('BETTING CALL: PLAYER CALLS ', response.data.message);
                         this.getTable();
                         this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
                     })
@@ -544,7 +544,7 @@ export default {
                         console.error('Ошибка при получении данных:', error);
                     });
             }
-            console.log('BETTING CALL ');
+            // console.log('BETTING CALL ');
         },
 
         bettingFold() {
@@ -554,7 +554,7 @@ export default {
             }
             axios.post(`${this.baseUrl}/API/fold`, playerFold)
                     .then(response => {
-                        console.log('BETTING FOLD: ', response);
+                        console.log('BETTING FOLD: ', response.data.message);
                         this.getTable();
                         this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
                     })
@@ -570,7 +570,7 @@ export default {
             }
             axios.post(`${this.baseUrl}/API/check`, playerCheck)
                     .then(response => {
-                        console.log('BETTING CHECK: ', response);
+                        console.log('BETTING CHECK: ', response.data.message);
                         this.getTable();
                         this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
                     })
@@ -582,9 +582,9 @@ export default {
         bettingBlind(bet) {
             if (bet * this.table.min_bet > this.playerBalance) {
                 alert('You don’t have enough to bet on')
-                console.log('BETTING BET: TOO POOR FOR BETTING');    
+                // console.log('BETTING BET: TOO POOR FOR BETTING');    
             } else {
-                console.log('BETTING BLIND trying', bet);
+                // console.log('BETTING BLIND trying', bet);
                 const playerBet = {
                     user_id: this.thisUserID,
                     game_id: this.game.id,
@@ -592,7 +592,7 @@ export default {
                 }
                 axios.post(`${this.baseUrl}/API/blind`, playerBet)
                     .then(response => {
-                        console.log('BETTING BLIND: PLAYER BETS ', response);
+                        console.log('BETTING BLIND: PLAYER BETS ', response.data.message);
                         this.getTable();
                         this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
                     })
@@ -609,7 +609,7 @@ export default {
             }
             axios.post(`${this.baseUrl}/API/blind_check`, playerBlindCheck)
                 .then(response => {
-                    console.log('BETTING BLIND CHECK: ', response);
+                    console.log('BETTING BLIND CHECK: ', response.data.message);
                     this.getTable();
                     this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
                 })
@@ -625,7 +625,7 @@ export default {
             }
             axios.post(`${this.baseUrl}/API/azi_in`, playerAziIn)
                     .then(response => {
-                        console.log('BETTING AZI HALF POT ', response);
+                        console.log('BETTING AZI HALF POT ', response.data.message);
                         this.getTable();
                         this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
                     })
@@ -641,7 +641,7 @@ export default {
             }
             axios.post(`${this.baseUrl}/API/azi_out`, playerAziOut)
                     .then(response => {
-                        console.log('BETTING AZI OUT ', response);
+                        console.log('BETTING AZI OUT ', response.data.message);
                         this.getTable();
                         this.$socket.emit('update_room', { room_id: this.roomId, user_id: this.thisUserID });
                     })
@@ -652,7 +652,7 @@ export default {
 
         dropThisPlayer() {
             clearInterval(this.timer);
-            console.log('DROPPED');
+            // console.log('DROPPED');
             this.leaveRoom(this.roomId);
             alert('You are have not enough funds for playing!');                        
             localStorage.removeItem('user_active_table');
@@ -672,7 +672,7 @@ export default {
         startDrag(event, item) {
         // Начало перетаскивания
             event.dataTransfer.setData('text/plain', JSON.stringify(item));
-            console.log('CARD DRAGGED:', item);
+            // console.log('CARD DRAGGED:', item);
         },
 
         dropCard(event) {
@@ -680,7 +680,7 @@ export default {
             try {
                 const item = JSON.parse(event.dataTransfer.getData('text/plain'));
                 if (item.type === 'card') {
-                    console.log('CARD VALID DROPPED:', item.pos, item.card);
+                    // console.log('CARD VALID DROPPED:', item.pos, item.card);
                     const droppedCard = {
                         user_id: this.thisUserID,
                         game_id: this.game.id,
