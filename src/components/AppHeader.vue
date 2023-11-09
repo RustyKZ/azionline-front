@@ -58,7 +58,7 @@
                     this.isAuth = await checkAuth(this.baseUrl); // Проверяйте авторизацию
                     if (this.isAuth) {
                         // Пользователь авторизован, выполните нужные действия
-                        this.userId = localStorage.getItem('user_id');
+                        this.userId = Number(localStorage.getItem('user_id'));
                         console.log('Header checkAuthorization: userId from storage is ', this.UserID)
                     } else {
                         // Пользователь не авторизован, выполните нужные действия
@@ -77,7 +77,7 @@
                     if (this.isWeb3Auth) {
                         // Пользователь авторизован, выполните нужные действия
                         this.userAddress = localStorage.getItem('user_wallet');
-                        this.userId = localStorage.getItem('user_id');                        
+                        this.userId = Number(localStorage.getItem('user_id'));
                         this.setIsWeb3Login(true);
                     } else {
                         // Пользователь не авторизован, выполните нужные действия
@@ -244,8 +244,10 @@
                     <li @click="goToGameRules" class="nav-link px-2 text-white link_button">Game Rules</li>                    
                     <li @click="goToTopList" class="nav-link px-2 text-white link_button">Top Players</li>
                     <li @click="goToAbout" class="nav-link px-2 text-white link_button">About</li>
-                    <li v-if="isAuth && userId == 3" @click="goToAddPostPage" class="nav-link px-2 text-white link_button">Add Post</li>
-                    <li v-if="isAuth && userId == 3" @click="goToDeletePostPage" class="nav-link px-2 text-white link_button">Delete post</li>
+                    
+                    <!-- <li v-if="isWeb3Auth && userId == 32" @click="goToAddPostPage" class="nav-link px-2 text-white link_button">Add Post</li>
+                    <li v-if="isWeb3Auth && userId == 32" @click="goToDeletePostPage" class="nav-link px-2 text-white link_button">Delete post</li> -->
+
                 </ul>
 
                 <div class="text-end">

@@ -129,7 +129,7 @@ export async function checkMetaMaskConnection() {
             const userdata = { userWallet: connectedAddress };
             console.log('ServerUrl is ', serverUrl, ' Responso is ', userdata);
             const response = await axios.post(serverUrl + '/API/check_web3_auth', userdata);
-
+            console.log('CHECK MM Connection', response.data)
             const isWeb3auth = response.data.web3auth;
             console.log('Server says: Web3auth is ', isWeb3auth)
             // После получения current_user_id от сервера

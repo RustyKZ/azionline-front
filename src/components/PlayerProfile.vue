@@ -149,7 +149,7 @@ export default {
             <div class="container my-3">
                 <div class="container mt-5; height: 100% ">
                     <div v-if="userInfo.nickname" class="alert alert-info" style="background: #F0FFF0; border: solid 1px green">
-                        <h3><b> {{ userInfo.nickname }} </b>- player profile</h3>
+                        <h3><b> {{ userInfo.nickname }} </b> - player profile</h3>
                         <hr>
 
                         <div class="row align-items-center d-flex" style="height: 44px;">

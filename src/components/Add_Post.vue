@@ -23,7 +23,7 @@
 </template>
 
 <script>
-import { checkAuth } from './auth.js';
+import { checkMetaMaskConnection } from './wallet_connect.js';
 export default {
   name: 'Add_Post',
   components: {
@@ -31,24 +31,31 @@ export default {
   data() {
     return {
       baseUrl: this.$root.serverUrl,
-      isAuth: false
+      isWeb3Auth: false,
+      userId: 0
     };
   },
-  created() {
-    this.checkAuthAndRedirect();
-    this.isAuth = checkAuth(this.baseUrl);
-    console.log('Add post is auth - ', this.isAuth)
+  created() {    
     },
   methods: {
     async checkAuthAndRedirect() {
-      this.isAuth = await checkAuth(this.baseUrl);
-      console.log('Add post is auth - ', this.isAuth);
+      this.isWeb3Auth = await checkMetaMaskConnection();
+      console.log('Add post is auth - ', this.isWeb3Auth);
       if (this.isAuth === false) {
         console.log('Add post IF INSIDE');
         this.$router.replace('/access_denied');
+      }
     }
-  }
-  }
+  },
+  async mounted() {
+    await this.checkAuthAndRedirect();
+    this.userId = Number(localStorage.getItem('user_id'));
+    console.log('ADD POST ', this.userId);
+    if (this.userId !=32) {        
+        this.$router.replace('/access_denied');
+      }
+
+  },
 }
 </script>
 

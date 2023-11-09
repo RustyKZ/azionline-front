@@ -5,21 +5,52 @@
         name: 'Top_List',
         data() {
             return {
-                posts: [],
+                topListServer: [],
+                topList: [],
+                sortBy: 1,
                 baseUrl: this.$root.serverUrl,
             };
         },
-        mounted() {        
-        axios.get(`${this.baseUrl}/API/getarticles`)
-            .then(response => {
-            this.posts = response.data;
-            console.log(this.posts);
-            })
-            .catch(error => {
-            console.error('Ошибка при получении данных:', error);
+        async mounted() {        
+            await axios.get(`${this.baseUrl}/API/gettoplist`)
+                .then(response => {
+                this.topList = response.data;                
+                })
+                .catch(error => {
+                console.error('Ошибка при получении данных:', error);
             });
         },
-        
+
+        methods: {
+            textNumber(number) {
+                if (typeof number !== 'number') {
+                    return '';
+                }
+                return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            },
+
+        },
+
+        computed: {
+            sortedList() {
+                let sortedArray = [];
+                let sortMode = Number(this.sortBy);
+                switch (sortMode) {
+                    case 0:
+                        sortedArray = this.topList.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+                    break;
+                    case 1:
+                        sortedArray = this.topList.slice().sort((a, b) => b.freegain - a.freegain);
+                    break;
+                    case 2:
+                        sortedArray = this.topList.slice().sort((a, b) => b.goldgain - a.goldgain);
+                    break;
+                    default:
+                        sortedArray = this.topList;
+                    }        
+                return sortedArray.slice(0, 100);
+            },
+        },
     };
 
 </script>
@@ -27,16 +58,43 @@
 <template>
     <div class="mainbox">
         <div class="container">
-            <!-- Используйте цикл v-for для вывода каждой записи в массиве posts -->
-            <div v-for="(post, index) in posts" :key="post.id">
-                <h2>{{ post.title }}</h2>
-                <p><b>{{ post.subtitle }}</b></p>
-                <img :src="baseUrl+'/static/postimage/' + post.image" v-if="post.image" alt="Image" class="img-container">
-                <p v-html="post.text"></p>
-                <p><i>{{ post.publication_date }}</i></p>
-                <hr v-if="index < posts.length - 1">
+            <div class="row align-items-center">
+                <div class="col-6"><h3>List of top players</h3></div>
+                <div class="col-3 text-end">
+                    <span><b>sort by:</b></span>
+                </div>
+                <div class="col-3 align-items-end">
+                    <select class="form-select" aria-label="Default select example" v-model="sortBy">                        
+                        <option selected value="1">Freecoin gain</option>
+                        <option value="2">Goldcoin gain</option>
+                        <option value="0">Days in game</option>
+
+                    </select>
+                </div>
             </div>
-        </div>
+            
+            <hr>
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col" class="text-center">Player</th>
+                        <th scope="col" class="text-center">Days in game</th>
+                        <th scope="col" class="text-center">Freecoin gain</th>
+                        <th scope="col" class="text-center">Goldcoin gain</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(player, index) in sortedList" :key="player.id">
+                        <th scope="row">{{ index + 1 }}</th>
+                        <td>{{ player.nickname }}</td>
+                        <td class="text-center">{{ player.date }}</td>
+                        <td class="text-center">{{ textNumber(player.freegain) }}</td>
+                        <td class="text-center">{{ textNumber(player.goldgain) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>        
     </div>
 </template>
 

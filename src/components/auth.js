@@ -60,7 +60,7 @@ export async function checkAuth(baseUrl) {
 
     return isAuthenticated;
   } catch (error) {
-    console.error('Error checking authorization:', error);
+      console.error('Error checking authorization:', error);
     throw error;
   }
 }
@@ -77,7 +77,7 @@ export function checkLogin() {
       return true;
     }
   } catch (error) {
-    console.error('Error checking authorization:', error);
+      console.error('Error checking authorization:', error);
     throw error;
   }
 }
