@@ -816,11 +816,15 @@ export default {
                                 <div v-for="rival in this.rivals" :key="rival" class="col align-items-center">
                                     <div class="align-items-center">
                                         <div v-if="game.speaker_id == rival" @click="goToPlayerProfile(rival)" class="main rounded-3" style="background: blue; cursor: pointer; text-align: center; vertical-align: middle">
-                                            <b style="color: aliceblue;">{{ rival }} - </b>
+
+                                            <!-- <b style="color: aliceblue;">{{ rival }} - </b> -->
+
                                             <b style="color: white"> {{ truncatedNicknameText(playerNames[rival]) }}</b>
                                         </div>
                                         <div v-else @click="goToPlayerProfile(rival)" class="main rounded-3" :style="{ background: statusColor[playerStatuses[rival]] }" style="cursor: pointer; text-align: center; vertical-align: middle">
-                                            <b style="color: aliceblue;">{{ rival }} - </b>
+
+                                            <!-- <b style="color: aliceblue;">{{ rival }} - </b> -->
+
                                             <b style="color: white"> {{ truncatedNicknameText(playerNames[rival]) }}</b>
                                         </div>
 
@@ -996,8 +1000,7 @@ export default {
                                         </div>
 
                                         <div class="col-6 d-flex align-items-center justify-content-center">                                        
-                                        <!--  Тестовый прогрессбар -->
-                                        {{ game.status[playerPos - 1] }}
+                                        
                                         </div>
                                     </div>
                                 </div>
@@ -1286,8 +1289,10 @@ export default {
                             </div>
                         </div>
 
-                        <hr style="color: green">
-                        <input type="submit" @click="startNewGame" class="btn btn-danger flex-grow-1 m-1" value="New game">
+                        <!-- <hr style="color: green">
+
+                        <input type="submit" @click="startNewGame" class="btn btn-danger flex-grow-1 m-1" value="New game"> -->
+
                     </div>
                 </div>
             </div>
