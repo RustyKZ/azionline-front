@@ -58,11 +58,12 @@
                     this.isAuth = await checkAuth(this.baseUrl); // Проверяйте авторизацию
                     if (this.isAuth) {
                         // Пользователь авторизован, выполните нужные действия
-                        this.userId = localStorage.getItem('user_id');                        
+                        this.userId = localStorage.getItem('user_id');
+                        console.log('Header checkAuthorization: userId from storage is ', this.UserID)
                     } else {
                         // Пользователь не авторизован, выполните нужные действия
                         this.isAuth = false;
-                        console.log('User is not authenticated');
+                        console.log('Header checkAuthorization: User is not authenticated');
                     }
                 } catch (error) {       
                 console.error('Error checking authorization:', error);

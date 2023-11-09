@@ -31,7 +31,7 @@
             <div v-for="(post, index) in posts" :key="post.id">
                 <h2>{{ post.title }}</h2>
                 <p><b>{{ post.subtitle }}</b></p>
-                <img :src="baseUrl+'/static/postimage/' + post.image" v-if="post.image" alt="Image" class="img-container">
+                <img :src="baseUrl+'/static/postimage/' + post.image" v-if="post.image" alt="Image" class="img-container rounded-3">
                 <p v-html="post.text"></p>
                 <p><i>{{ post.publication_date }}</i></p>
                 <hr v-if="index < posts.length - 1">

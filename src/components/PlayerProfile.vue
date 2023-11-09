@@ -1,5 +1,6 @@
 <script>
 import axios from 'axios';
+
 import { tokenTransfer } from './token.js'
 
 export default {
@@ -13,25 +14,34 @@ export default {
             user: { user_id: '' },
             userNewInfo: {
                 nickname: "", // Замените на ваше начальное значение
-                // Другие данные пользователя
+                // Другие данные пользователя            
             },
-      newName: "",
-      editing: false,
+
+            newName: "",
+            editing: false,
+            refilling: false,
+            goldValue: 0,
         };
     },
     created() {
         this.userId = this.$route.params.user_id;
-        this.thisUserID = localStorage.getItem('user_id');
-        this.user.user_id = localStorage.getItem('user_id');
+        this.thisUserID = Number(localStorage.getItem('user_id'));
+        this.user.user_id = this.thisUserID = Number(localStorage.getItem('user_id'));
         console.log(this.user)
     },
     methods: {
         startEditing() {
             this.newName = this.userNewInfo.nickname;
             this.editing = true;
-        },
+        },        
         cancelEditing() {
             this.editing = false;
+        },
+        startRefill() {            
+            this.refilling = true;
+        },        
+        cancelRefill() {
+            this.refilling = false;
         },
         submitChange() {
             // Отправьте данные на сервер и обновите userInfo
@@ -54,16 +64,51 @@ export default {
                 });    
             this.editing = false;
         },
-        async requestToken() {
-            try {
-                await tokenTransfer(17500);     
-            } catch (error) {
-                console.log('Token transfer failed');
+
+        async requestToken(value) {
+            this.refilling = false;
+            console.log('Refilling ', value)
+            if (Number.isInteger(value) && value > 0) {
+                try {
+                    await tokenTransfer(value);
+                    await this.addGoldcoin(value);
+                    this.getUser();
+                } catch (error) {
+                    const errorMessage = error.response.data.message;
+                    alert(errorMessage);
+                    console.log('Token transfer failed');
+                }
+            } else {
+                alert('Incorrect tokens value')
+            }            
+        },
+
+        confirmEmail() {
+            alert('This option does not work yet');
+        },
+
+        addFreecoin() {
+            alert('This option does not work yet');
+        },
+        
+        addGoldcoin(value) {
+            const dataToSend = {
+                user_id: this.thisUserID,
+                gold: value,
             }
-            
-        }
-    },
-    mounted() {
+            console.log(dataToSend)
+            axios.post(`${this.baseUrl}/API/add_goldcoin`, dataToSend)
+            .then(response => {
+                const data = response.data; // Получаем данные с сервера
+                console.log(data)                
+            })
+            .catch(error => {
+                console.error('Ошибка при получении данных:', error);
+            })
+            this.refilling = false
+        },
+
+        getUser() {
         axios.post(`${this.baseUrl}/API/profile/${this.userId}`, this.user)
             .then(response => {
                 const data = response.data; // Получаем данные с сервера
@@ -90,6 +135,10 @@ export default {
             .catch(error => {
                 console.error('Ошибка при получении данных:', error);
             })
+        },
+    },
+    mounted() {
+        this.getUser();        
     },
 }
 </script>
@@ -132,7 +181,7 @@ export default {
                                 <h5><b> {{ userInfo.email }} </b></h5><br>
                             </div>
                             <div class="col-md-2 align-items-center d-flex flex-wrap justify-content-center">
-                                <div class="btn btn-outline-secondary btn-sm w-100"> Comfirm email</div>
+                                <div @click="confirmEmail" class="btn btn-outline-secondary btn-sm w-100"> Comfirm email</div>
                             </div>
                         </div>
 
@@ -144,7 +193,7 @@ export default {
                                 <h5><b> {{ userInfo.freecoin }} </b></h5><br>
                             </div>
                             <div class="col-md-2 align-items-center d-flex flex-wrap justify-content-center">
-                                <div class="btn btn-outline-secondary btn-sm w-100"> Add freecoin </div>
+                                <div @click="addFreecoin" class="btn btn-outline-secondary btn-sm w-100"> Add freecoin </div>
                             </div>
                         </div>
 
@@ -153,10 +202,19 @@ export default {
                                 <h5 class="me-3">Gold coins balance:</h5>
                             </div>
                             <div class="col-md-7 align-items-center d-flex">
-                                <h5><b> {{ userInfo.goldcoin }} </b></h5><br>
+                                <span><h5><b> {{ userInfo.goldcoin }} </b></h5></span>
+                                <span v-if="refilling" class="input-group input-group-sm ms-5 align-items-center d-flex">
+                                    <span class="input-group-text">Tokens for replenishment: </span>                                        
+                                    <input type="number" class="form-control" v-model="goldValue">
+                                    <span class="col-md-2 ms-5 align-items-center d-flex flex-wrap justify-content-center">
+                                        <button @click="requestToken(goldValue)" class="btn btn-warning btn-sm w-100" title="To replenish your account, you must have AZI-b tokens in your connected Metamask"> Refill </button>                                        
+                                    </span>
+                                </span>
+                                <br>
                             </div>
                             <div class="col-md-2 align-items-center d-flex flex-wrap justify-content-center">
-                                <button  @click="requestToken" class="btn btn-warning btn-sm w-100"> Add GOLDCOIN </button>
+                                <button v-if="!refilling" @click="startRefill" class="btn btn-warning btn-sm w-100" title="To replenish your account, you must have AZI-b tokens in your connected Metamask"> Add GOLDCOIN </button>
+                                <button v-else @click="cancelRefill" class="btn btn-outline-warning btn-sm w-100"> Cancel </button>
                             </div>
                         </div>
 

@@ -11,7 +11,7 @@ export async function tokenTransfer(tokenQuantityDec) {
         console.log('Need more tokens');
     }
     const tokenQuantity = tokenQuantityDec.toString() + '000000000000000000';
-    console.log('tokenTransfer function started', tokenQuantity)
+    // console.log('tokenTransfer function started', tokenQuantity)
     if (typeof window.ethereum !== 'undefined') {
         console.log(' typeof window.ethereum !== undefined - DONE');
         const web3 = new Web3(window.ethereum);
@@ -41,10 +41,12 @@ export async function tokenTransfer(tokenQuantityDec) {
             });
             // Транзакция отправлена успешно
             console.log(`Транзакция успешно отправлена: ${tokenQuantityDec} токенов переведены на адрес ${hostWalletAddress}`);
-        } catch (error) {
+        } catch (error) {            
+            alert(error);                
             console.error('Ошибка отправки транзакции:', error);
         }
     } else {
+        alert('Metamask not found. Please install it, connect your account and try again')
         console.error('Metamask not found. Please install it, connect your account and try again');
     }
 }

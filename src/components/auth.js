@@ -27,7 +27,10 @@ export async function checkAuth(baseUrl) {
     const accessToken = localStorage.getItem('access_token');
     if (!accessToken) {
       // Если токен отсутствует, пользователь не авторизован
+      // console.log('AUTH.JS CheckAuth: No token in storage')
       return false;
+    } else {
+      // console.log('AUTH.JS CheckAuth:', accessToken)
     }
     const response = await axios.get(baseUrl + '/API/check_auth', {
       headers: {

@@ -13,10 +13,10 @@
     <div class="container">
           <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
             <div class="col-md-5 d-flex align-items-center">
-                <a href="/" class="mb-3 me-2 mb-md-0 text-body-secondary text-decoration-none lh-1">
+                <a href="/donation/" class="mb-3 me-2 mb-md-0 text-body-secondary text-decoration-none lh-1">
                     <img src="/images/logo-footer.png" class="bi" height="36">
                 </a>
-                <span class="mb-3 mb-md-0 text-body-secondary">© 2023 SuperPuper Company, Inc</span>
+                <span class="mb-3 mb-md-0 text-body-secondary">© 2023 AZI Online card game</span>
             </div>
             <div>
                 <a href="#" class="mb-3 me-4 mb-md-0 text-body-secondary text-decoration-none lh-1"><img src="/images/appstore.png" class="bi" height="44"></a>
