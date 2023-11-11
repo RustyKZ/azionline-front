@@ -4,9 +4,7 @@ import store from './store.js'
 import router from './app_routes'
 
 import 'bootstrap/dist/css/bootstrap.css' // Импорт стилей Bootstrap
-import 'bootstrap-vue/dist/bootstrap-vue.css' // Импорт стилей Bootstrap-Vue
 import 'bootstrap'
-// import { BootstrapVue3 } from 'bootstrap-vue'
 
 import io from 'socket.io-client';
 
@@ -15,11 +13,13 @@ const app = createApp(App)
 app.use(store); // Используйте хранилище Vuex в приложении
 
 
-app.config.globalProperties.serverUrl = 'http://127.0.0.1:8000'
+// app.config.globalProperties.serverUrl = 'http://127.0.0.1:5000'
+app.config.globalProperties.serverUrl = 'https://choosenextlife.com/azi/'
 app.config.globalProperties.tokenContractAddress = '0xE8544773D7217Ff4Bb6A19636779139460A87ecd'
 app.config.globalProperties.hostWalletAddress = '0x5B4c138eb869Cb2Ad29414912d21E40ecAB4BFbA'
 
-export const serverUrl = 'http://127.0.0.1:8000'
+// export const serverUrl = 'http://127.0.0.1:5000'
+export const serverUrl = 'https://choosenextlife.com/azi/'
 export const userTokenContract = '0xE8544773D7217Ff4Bb6A19636779139460A87ecd'
 export const hostWalletAddress = '0x5B4c138eb869Cb2Ad29414912d21E40ecAB4BFbA'
 

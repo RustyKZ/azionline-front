@@ -2,13 +2,11 @@
 import axios from 'axios';
 import { checkLogin } from './auth.js';
 import { checkWeb3 } from './wallet_connect.js';
-// import { VueDraggableNext } from 'vue-draggable-next';
 
 
 export default {
     name: 'PlayingTablePage',
     components: {
-      //  VueDraggableNext,
     },
     data() {
         return {

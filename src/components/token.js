@@ -1,9 +1,6 @@
 import Web3 from 'web3';
 import { userTokenContract } from '../main'
 import { hostWalletAddress } from '../main'
-// import { serverUrl } from '../main'
-// import axios from 'axios';
-
 
 export async function tokenTransfer(tokenQuantityDec) {
     if (tokenQuantityDec<1) {
