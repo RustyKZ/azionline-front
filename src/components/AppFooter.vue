@@ -26,12 +26,16 @@
             </div>
 
             <ul class="nav col-md-3 justify-content-end list-unstyled d-flex">
-                <li class="me-2"><a class="text-body-secondary" href="#"><img src="/images/36-discord.png" class="bi" width="36" height="36"></a></li>
-                <li class="me-2"><a class="text-body-secondary" href="#"><img src="/images/36-reddit.png" class="bi" width="36" height="36"></a></li>
-                <li class="me-2"><a class="text-body-secondary" href="#"><img src="/images/36-telegram.png" class="bi" width="36" height="36"></a></li>
-                <li class="me-2"><a class="text-body-secondary" href="#"><img src="/images/36-x.png" class="bi" width="36" height="36"></a></li>
-                <li class="me-2"><a class="text-body-secondary" href="#"><img src="/images/36-facebook.png" class="bi" width="36" height="36"></a></li>
-                <li class="me-2"><a class="text-body-secondary" href="#"><img src="/images/36-instagram.png" class="bi" width="36" height="36"></a></li>
+
+                <!-- <li class="me-2"><a class="text-body-secondary" href="#" title="Not yet" style="cursor: default"><img src="/images/36-discord.png" class="bi" width="36" height="36"></a></li> -->
+
+                <li class="me-2"><a class="text-body-secondary" href="https://www.reddit.com/r/Azi_online/"><img src="/images/36-reddit.png" class="bi" width="36" height="36"></a></li>
+                <li class="me-2"><a class="text-body-secondary" href="https://t.me/Azi_online"><img src="/images/36-telegram.png" class="bi" width="36" height="36"></a></li>
+                <li class="me-2"><a class="text-body-secondary" href="https://twitter.com/AZI_Online"><img src="/images/36-x.png" class="bi" width="36" height="36"></a></li>
+                <li class="me-2"><a class="text-body-secondary" href="https://www.facebook.com/Azi.online.card.game/"><img src="/images/36-facebook.png" class="bi" width="36" height="36"></a></li>
+
+                <!-- <li class="me-2"><a class="text-body-secondary" href="#" title="Not yet" style="cursor: default"><img src="/images/36-instagram.png" class="bi" width="36" height="36"></a></li> -->
+
             </ul>
           </footer>
         </div>
